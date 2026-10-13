@@ -1,0 +1,32 @@
+{
+  "fill" : {
+    "automatic-gradient" : "extended-srgb:0.10196,0.20392,0.43137,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "lume.svg",
+          "name" : "lume"
+        },
+        {
+          "image-name" : "chip.svg",
+          "name" : "chip"
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.4
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : [
+      "macOS"
+    ]
+  }
+}

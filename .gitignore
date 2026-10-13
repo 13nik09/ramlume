@@ -1,0 +1,37 @@
+# Xcode and release builds
+build/
+dist/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+*.xcarchive
+*.xcresult
+
+# Local configuration (signing team, bundle identifier overrides)
+Configuration/Local.xcconfig
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# LLVM coverage output from running instrumented builds directly
+*.profraw
+*.profdata

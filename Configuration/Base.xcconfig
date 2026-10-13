@@ -1,0 +1,27 @@
+// RamLume shared build configuration.
+//
+// Everything you are likely to change before distributing your own build lives here.
+// Machine-specific overrides (your Apple Developer team, signing identity, or a
+// different bundle identifier prefix) belong in `Configuration/Local.xcconfig`,
+// which is optional and ignored by git. See docs/building.md.
+
+// Reverse-DNS prefix for the app and test bundle identifiers: the official builds are
+// `io.github.13nik09.RamLume`. If you distribute your own modified build, use a prefix you
+// control (set it in Local.xcconfig) so it doesn't share settings, permissions, or login
+// items with the official app.
+RAMLUME_BUNDLE_ID_PREFIX = io.github.13nik09
+
+MARKETING_VERSION = 0.1.0
+CURRENT_PROJECT_VERSION = 1
+MACOSX_DEPLOYMENT_TARGET = 14.0
+
+// Universal binary (Apple silicon + Intel) for Release builds.
+ARCHS = $(ARCHS_STANDARD)
+
+// Ad-hoc signing ("Sign to Run Locally") so the project builds without an
+// Apple Developer account. Builds signed this way are NOT notarized.
+CODE_SIGN_STYLE = Manual
+CODE_SIGN_IDENTITY = -
+DEVELOPMENT_TEAM =
+
+#include? "Local.xcconfig"

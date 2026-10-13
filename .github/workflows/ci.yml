@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and test
+    # The layered app icon (RamLume/Resources/AppIcon.icon) needs Xcode 26 or later.
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Select the newest installed Xcode
+        run: |
+          XCODE="$(ls -d /Applications/Xcode*.app | sort -V | tail -n 1)"
+          echo "Using $XCODE"
+          sudo xcode-select -s "$XCODE/Contents/Developer"
+          xcodebuild -version
+
+      - name: Run unit tests
+        run: |
+          xcodebuild test \
+            -project RamLume.xcodeproj \
+            -scheme RamLume \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            -derivedDataPath build/DerivedData
+
+      - name: Build release archive (ad-hoc signed, not notarized)
+        run: scripts/make-release.sh
+
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: RamLume-unsigned
+          path: |
+            dist/RamLume-*-macOS.zip
+            dist/RamLume-*-macOS.zip.sha256
+          if-no-files-found: error

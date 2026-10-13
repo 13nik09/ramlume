@@ -1,0 +1,9 @@
+// Copy this file to Local.xcconfig (ignored by git) to override settings on your machine.
+
+// Your reverse-DNS prefix for your own builds; the bundle identifier becomes <prefix>.RamLume.
+// RAMLUME_BUNDLE_ID_PREFIX = com.yourname
+
+// Signing with your Apple Developer account:
+// DEVELOPMENT_TEAM = ABCDE12345
+// CODE_SIGN_IDENTITY = Apple Development
+// For distribution builds: CODE_SIGN_IDENTITY = Developer ID Application
