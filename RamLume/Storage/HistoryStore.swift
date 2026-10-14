@@ -15,6 +15,13 @@ struct HistoryPersistence: Sendable {
     let fileURL: URL
 
     static func defaultFileURL() -> URL? {
+        #if DEBUG
+        // `--history-file <path>`: keeps stress tests away from the real history file.
+        let arguments = CommandLine.arguments
+        if let index = arguments.firstIndex(of: "--history-file"), arguments.indices.contains(index + 1) {
+            return URL(fileURLWithPath: arguments[index + 1])
+        }
+        #endif
         guard let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
             return nil
         }

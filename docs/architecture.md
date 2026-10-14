@@ -131,6 +131,31 @@ the event timeline to `~/Library/Application Support/RamLume/History.json` — u
 with a full week of history. The time RamLume wasn't running is recorded as a gap on the next launch. An unreadable
 file is set aside (`History.unreadable.json`) and RamLume starts fresh.
 
+## Chart hover
+
+Every history chart, and the panel's small chart, shares `ChartCrosshair`, an overlay that draws
+the crosshair, marker, and tooltip. Two rules keep hover cheap and loop-free:
+
+- **The hover area never moves.** The view that receives hover is the overlay's base view; the
+  crosshair, marker, and tooltip are separate `.overlay`s on it, which can't change its frame,
+  and the tooltip is placed with offsets and a frame, never with alignment guides. SwiftUI
+  re-checks hover after every layout, so anything that let the tooltip move the hover
+  area would turn into a feedback loop. This happened before the first release: a tooltip on the
+  right half was positioned with an alignment guide inside a shared `ZStack`, which widened the
+  stack and shifted the hover area by the tooltip's width; the pointer then pointed at a different
+  value, the tooltip flipped sides, and the cycle never ended (100% of a core, no redraws).
+- **State changes only when its value changes.** `ChartHoverState.resolve` is a pure function of
+  the pointer position, plot frame, and data; the view writes the result only if it differs.
+
+`HoverLoopRegressionTests` runs the Debug-only hover lab (`RamLume/Debug/HoverLab.swift`) in a
+child process: it drives SwiftUI's real hover handling with in-process synthetic events across all
+six charts and fails if the main thread stalls or state writes outnumber events. The events enter
+at the hosting view (`mouseEntered`/`mouseMoved` with SwiftUI's own tracking area), because tests
+mustn't move the real pointer; the path from the window server to that view isn't covered.
+`DashboardLifecycleTests` runs the dashboard stress cycles (`RamLume/Debug/UIStress.swift`) the
+same way and fails on a stall, an AppKit table warning, or a closed dashboard or panel that isn't
+released.
+
 ## Windows in a menu-bar-only app
 
 - `LSUIElement` keeps RamLume out of the Dock by default.

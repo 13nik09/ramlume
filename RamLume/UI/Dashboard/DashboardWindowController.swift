@@ -9,6 +9,11 @@ enum ActivationPolicyController {
 
     static func windowDidOpen(_ window: NSWindow) {
         openWindows.insert(ObjectIdentifier(window))
+        #if DEBUG
+        // `--no-activate` runs (tests, stress runs, screenshots) stay out of the Dock, which would
+        // otherwise show and hide RamLume's icon with every window.
+        if DebugOptions.avoidsActivation { return }
+        #endif
         if NSApp.activationPolicy() != .regular {
             NSApp.setActivationPolicy(.regular)
         }
@@ -42,6 +47,11 @@ final class DashboardWindowController: NSObject, NSWindowDelegate {
     private let model: AppModel
     private var window: NSWindow?
     private var occlusionObserver: NSObjectProtocol?
+
+    #if DEBUG
+    /// The dashboard's hosting view, for the debug stress harnesses.
+    var debugHostingView: NSView? { window?.contentView }
+    #endif
 
     init(model: AppModel) {
         self.model = model

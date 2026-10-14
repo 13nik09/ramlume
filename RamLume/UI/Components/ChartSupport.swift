@@ -80,110 +80,35 @@ enum ChartHoverTarget: Equatable {
     case gap(HistoryGap)
 }
 
-/// Hover crosshair and tooltip drawn *over* a chart rather than as chart marks. It owns its
-/// hover state, so moving the pointer redraws only this overlay — never the chart's marks —
-/// and it snaps to data positions, so it only updates when the nearest point changes.
-struct ChartCrosshair<Tooltip: View>: View {
-    var proxy: ChartProxy
-    /// Chronological x positions the crosshair snaps to.
-    var dates: [Date]
-    var gaps: [HistoryGap] = []
-    /// Y value for the marker dot at a point, if any.
-    var markerValue: ((Int) -> Double?)?
-    var markerColor: Color = .accentColor
-    @ViewBuilder var tooltip: (ChartHoverTarget) -> Tooltip
+/// What a chart's crosshair points at. A pure value, so the rule "change state only when the
+/// result changes" is enforced in one place and unit tested (ChartDataTests).
+struct ChartHoverState: Equatable {
+    var target: ChartHoverTarget?
+    /// The pointer's x position, kept only over a gap: a gap has no data position to snap to.
+    var gapPointerX: CGFloat?
 
-    @State private var target: ChartHoverTarget?
-    @State private var pointerX: CGFloat = 0
+    static let idle = ChartHoverState(target: nil, gapPointerX: nil)
 
-    var body: some View {
-        GeometryReader { geometry in
-            if let anchor = proxy.plotFrame {
-                let plot = geometry[anchor]
-                ZStack(alignment: .topLeading) {
-                    Rectangle()
-                        .fill(.clear)
-                        .contentShape(Rectangle())
-                        .onContinuousHover { phase in
-                            update(phase: phase, plot: plot)
-                        }
-                    if let target, let x = crosshairX(for: target, plot: plot) {
-                        Rectangle()
-                            .fill(Color.secondary.opacity(0.6))
-                            .frame(width: 1, height: plot.height)
-                            .offset(x: x - 0.5, y: plot.minY)
-                            .allowsHitTesting(false)
-                        if case .point(let index) = target,
-                           let value = markerValue?(index),
-                           let y = proxy.position(forY: value) {
-                            Circle()
-                                .fill(markerColor)
-                                .overlay(Circle().strokeBorder(Color(nsColor: .controlBackgroundColor), lineWidth: 2))
-                                .frame(width: 10, height: 10)
-                                .offset(x: x - 5, y: plot.minY + y - 5)
-                                .allowsHitTesting(false)
-                        }
-                        tooltipView(for: target, x: x, plot: plot)
-                            .allowsHitTesting(false)
-                    }
-                }
-            }
+    /// The state for a pointer at `location` (in the overlay's coordinates), or `nil` once it left.
+    /// `dateAtX` maps an x offset into the plot to a date (the chart proxy does this).
+    static func resolve(
+        location: CGPoint?,
+        plot: CGRect,
+        dates: [Date],
+        gaps: [HistoryGap],
+        dateAtX: (CGFloat) -> Date?
+    ) -> ChartHoverState {
+        guard let location, plot.width > 0 else { return .idle }
+        let x = location.x - plot.minX
+        guard x >= 0, x <= plot.width, let date = dateAtX(x) else { return .idle }
+        if let gap = gaps.first(where: { $0.start <= date && date <= $0.end }) {
+            // Whole points: sub-point jitter isn't a change worth redrawing.
+            return ChartHoverState(target: .gap(gap), gapPointerX: location.x.rounded())
         }
-    }
-
-    @ViewBuilder
-    private func tooltipView(for target: ChartHoverTarget, x: CGFloat, plot: CGRect) -> some View {
-        // Keep the tooltip inside the plot: right of the crosshair on the left half, left of it on the right half.
-        if x < plot.midX {
-            tooltip(target)
-                .fixedSize()
-                .offset(x: x + 8, y: plot.minY + 4)
-        } else {
-            tooltip(target)
-                .fixedSize()
-                .alignmentGuide(.leading) { dimensions in dimensions[.trailing] }
-                .offset(x: x - 8, y: plot.minY + 4)
+        if let index = nearestIndex(in: dates, to: date) {
+            return ChartHoverState(target: .point(index), gapPointerX: nil)
         }
-    }
-
-    private func crosshairX(for target: ChartHoverTarget, plot: CGRect) -> CGFloat? {
-        switch target {
-        case .point(let index):
-            guard dates.indices.contains(index), let x = proxy.position(forX: dates[index]) else { return nil }
-            return plot.minX + x
-        case .gap:
-            return pointerX
-        }
-    }
-
-    /// SwiftUI re-sends the current hover location after every view update, so this must only
-    /// write state that actually changed. An unconditional write would make each update request
-    /// another, keeping the main thread busy for as long as the pointer rests on the chart.
-    private func update(phase: HoverPhase, plot: CGRect) {
-        #if DEBUG
-        // `--no-mouse` measurements mustn't depend on where the pointer happens to rest.
-        if DebugOptions.ignoresMouse { return }
-        #endif
-        switch phase {
-        case .active(let location):
-            let x = location.x - plot.minX
-            guard x >= 0, x <= plot.width, let date: Date = proxy.value(atX: x) else {
-                if target != nil { target = nil }
-                return
-            }
-            let newTarget: ChartHoverTarget?
-            if let gap = gaps.first(where: { $0.start <= date && date <= $0.end }) {
-                newTarget = .gap(gap)
-                if abs(pointerX - location.x) >= 0.5 { pointerX = location.x }
-            } else if let index = Self.nearestIndex(in: dates, to: date) {
-                newTarget = .point(index)
-            } else {
-                newTarget = nil
-            }
-            if newTarget != target { target = newTarget }
-        case .ended:
-            if target != nil { target = nil }
-        }
+        return .idle
     }
 
     static func nearestIndex(in dates: [Date], to date: Date) -> Int? {
@@ -198,6 +123,131 @@ struct ChartCrosshair<Tooltip: View>: View {
             return low - 1
         }
         return low
+    }
+}
+
+/// Hover crosshair and tooltip drawn *over* a chart rather than as chart marks. It owns its
+/// hover state, so moving the pointer redraws only this overlay — never the chart's marks —
+/// and it snaps to data positions, so it only updates when the nearest point changes.
+struct ChartCrosshair<Tooltip: View>: View {
+    var proxy: ChartProxy
+    /// Chronological x positions the crosshair snaps to.
+    var dates: [Date]
+    var gaps: [HistoryGap] = []
+    /// Y value for the marker dot at a point, if any.
+    var markerValue: ((Int) -> Double?)?
+    var markerColor: Color = .accentColor
+    @ViewBuilder var tooltip: (ChartHoverTarget) -> Tooltip
+
+    @State private var hover = ChartHoverState.idle
+
+    var body: some View {
+        #if DEBUG
+        let _ = HoverDiagnostics.record { $0.crosshairBodies += 1 }
+        #endif
+        GeometryReader { geometry in
+            if let anchor = proxy.plotFrame {
+                let plot = geometry[anchor]
+                // The hover region is the base view, and everything drawn for the current target is
+                // an overlay on it. Overlays never change their base view's frame, so showing,
+                // moving, or flipping the tooltip can't move the region that receives hover.
+                // (When they shared a ZStack, a tooltip placed left of the crosshair widened the
+                // stack and shifted the region; SwiftUI re-tested hover after that layout, the
+                // pointer landed on a different target whose tooltip went right, the shift
+                // disappeared, and the cycle repeated forever at 100% CPU.)
+                Rectangle()
+                    .fill(.clear)
+                    .contentShape(Rectangle())
+                    .onContinuousHover { phase in
+                        update(phase: phase, plot: plot)
+                    }
+                    .overlay(alignment: .topLeading) {
+                        if let target = hover.target, let x = crosshairX(for: target, plot: plot) {
+                            Rectangle()
+                                .fill(Color.secondary.opacity(0.6))
+                                .frame(width: 1, height: plot.height)
+                                .offset(x: x - 0.5, y: plot.minY)
+                                .allowsHitTesting(false)
+                        }
+                    }
+                    .overlay(alignment: .topLeading) {
+                        if case .point(let index)? = hover.target,
+                           let x = crosshairX(for: .point(index), plot: plot),
+                           let value = markerValue?(index),
+                           let y = proxy.position(forY: value) {
+                            Circle()
+                                .fill(markerColor)
+                                .overlay(Circle().strokeBorder(Color(nsColor: .controlBackgroundColor), lineWidth: 2))
+                                .frame(width: 10, height: 10)
+                                .offset(x: x - 5, y: plot.minY + y - 5)
+                                .allowsHitTesting(false)
+                        }
+                    }
+                    .overlay(alignment: .topLeading) {
+                        if let target = hover.target, let x = crosshairX(for: target, plot: plot) {
+                            tooltipView(for: target, x: x, plot: plot)
+                                .allowsHitTesting(false)
+                        }
+                    }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func tooltipView(for target: ChartHoverTarget, x: CGFloat, plot: CGRect) -> some View {
+        // Keep the tooltip inside the plot: right of the crosshair on the left half, left of it on
+        // the right half. The left placement is a frame that ends 8 points before the crosshair,
+        // with the tooltip at its trailing edge. Not an alignment guide: in this overlay a guide
+        // had no effect (the tooltip stayed right of the crosshair), and in the shared stack this
+        // used to be, it moved the hover area (see `body`).
+        if x < plot.midX {
+            tooltip(target)
+                .fixedSize()
+                .offset(x: x + 8, y: plot.minY + 4)
+        } else {
+            tooltip(target)
+                .fixedSize()
+                .frame(width: max(x - 8, 0), alignment: .trailing)
+                .offset(y: plot.minY + 4)
+        }
+    }
+
+    private func crosshairX(for target: ChartHoverTarget, plot: CGRect) -> CGFloat? {
+        switch target {
+        case .point(let index):
+            guard dates.indices.contains(index), let x = proxy.position(forX: dates[index]) else { return nil }
+            return plot.minX + x
+        case .gap:
+            return hover.gapPointerX
+        }
+    }
+
+    /// SwiftUI re-runs hover after every layout change, so this must write state only when the
+    /// result changed (and the hover region must never move with the state; see `body`).
+    private func update(phase: HoverPhase, plot: CGRect) {
+        #if DEBUG
+        let phaseLabel = switch phase {
+        case .active(let location): "active(\(Int(location.x)),\(Int(location.y))) plot.minX=\(Int(plot.minX)) width=\(Int(plot.width))"
+        case .ended: "ended"
+        }
+        HoverDiagnostics.record { $0.handlerCalls += 1; $0.note("hover \(phaseLabel)") }
+        // `--no-mouse` measurements mustn't depend on where the pointer happens to rest.
+        if DebugOptions.ignoresMouse { return }
+        #endif
+        let location: CGPoint? = switch phase {
+        case .active(let point): point
+        case .ended: nil
+        }
+        let next = ChartHoverState.resolve(location: location, plot: plot, dates: dates, gaps: gaps) { x in
+            proxy.value(atX: x)
+        }
+        guard next != hover else { return }
+        hover = next
+        #if DEBUG
+        let label = switch next.target { case .gap: "gap"; case .point: "point"; case nil: "none" }
+        let detail = switch next.target { case .gap(let gap): "gap(\(gap.start.timeIntervalSince1970))"; case .point(let index): "point(\(index))"; case nil: "none" }
+        HoverDiagnostics.record { $0.stateWrites += 1; $0.lastTarget = label; $0.note("write target=\(detail)") }
+        #endif
     }
 }
 

@@ -259,6 +259,38 @@ struct MonitoringCoordinatorTests {
         #expect(coordinator.current.processes != nil)
     }
 
+    @Test func rapidPressureChangesStayBounded() {
+        coordinator.start()
+        coordinator.setVisible(true, surface: .dashboard)
+        sample()
+        var updates = 0
+        coordinator.onUpdate = { updates += 1 }
+        for index in 0..<1_000 {
+            let level: MemoryPressureLevel = index.isMultiple(of: 2) ? .warning : .normal
+            pressure.level = level
+            coordinator.handlePressureEvent(level)
+        }
+        // One update per event, no more; history keeps a bounded timeline of the changes.
+        #expect(updates == 1_000)
+        #expect(coordinator.current.pressure.level == .normal)
+        #expect(history.events.count <= HistoryStore.eventCapacity)
+        #expect(coordinator.pressure.level == .normal)   // the published copy is current too
+    }
+
+    @Test func repeatedDashboardOpenCloseKeepsCadenceAndPublishingConsistent() {
+        coordinator.start()
+        for _ in 0..<500 {
+            coordinator.setVisible(true, surface: .dashboard)
+            #expect(coordinator.scheduler.cadence.memoryInterval == 1)
+            coordinator.setVisible(false, surface: .dashboard)
+        }
+        #expect(coordinator.scheduler.visibility == .hidden)
+        #expect(coordinator.scheduler.cadence.memoryInterval == 5)
+        let revision = history.revision
+        sample()
+        #expect(history.revision == revision)   // nothing is published while nothing is visible
+    }
+
     @Test func swapGrowthIsLogged() {
         coordinator.start()
         sample()

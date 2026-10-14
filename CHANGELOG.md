@@ -34,6 +34,32 @@ First public version. Release notes: [docs/release-notes/v0.1.0.md](docs/release
 - `scripts/make-release.sh`: universal release archive with build checks, checksum, and optional
   Developer ID signing and notarization.
 
+### Fixed (before the first release)
+
+- Resting the pointer on a history chart could make RamLume spin at 100% of a CPU core and stop
+  redrawing. A tooltip placed left of the crosshair widened the chart overlay's layout and moved
+  its hover area; SwiftUI re-checked hover after that layout, the pointer then pointed at a
+  different value whose tooltip went right, and the cycle repeated without end. The hover area
+  is now independent of the tooltip, hover state changes only when its value changes, and a
+  regression test drives real SwiftUI hover in a separate process to keep it that way.
+- With a long event timeline (a couple of hundred events), opening Events made AppKit log
+  "reentrant operation in its NSTableView delegate", which it says will become an assertion. The
+  timeline is now a lazy stack instead of a `List`, which also stopped AppKit from keeping about
+  ten table buttons (about 90 KB) alive every time the timeline was shown.
+- The Processes section rebuilt and re-sorted its whole table every second, although the list only
+  changes when processes are scanned. It no longer depends on the per-second memory reading,
+  which cut the work it does while visible by about 40% (instructions retired, same data).
+
+### Known issues
+
+- While Processes is visible, AppKit sometimes logs "reentrant operation in its NSTableView
+  delegate" when a scan reorders a long process list (SwiftUI's `Table` applying the change).
+  No effect on the table or on CPU use has been seen; `--processes-probe` in Debug builds
+  reproduces it.
+- Each time the dashboard is opened and closed, AppKit keeps one of the sidebar's buttons alive
+  (about 9 KB), roughly 1 MB per 100 openings until RamLume quits. The leak is inside AppKit; see
+  [docs/performance.md](docs/performance.md).
+
 ### Notes
 
 - Release archives are ad-hoc signed and **not notarized** unless a release says otherwise.

@@ -9,17 +9,25 @@ import SwiftUI
 @MainActor
 final class StatusItemController: NSObject, NSPopoverDelegate {
     private let model: AppModel
-    private let statusItem: NSStatusItem
+    /// Always present, except in debug stress runs started with `--no-status-item`.
+    private let statusItem: NSStatusItem?
     private let popover = NSPopover()
     private var outsideClickMonitor: Any?
     private var lastPresentation: StatusItemPresentation?
 
     init(model: AppModel) {
         self.model = model
+        #if DEBUG
+        // `--no-status-item`: long stress runs shouldn't flicker an icon in the menu bar. Hiding
+        // an item would be remembered by AppKit for later launches, so none is created.
+        statusItem = CommandLine.arguments.contains("--no-status-item")
+            ? nil : NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        #else
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        #endif
         super.init()
 
-        if let button = statusItem.button {
+        if let button = statusItem?.button {
             button.image = Self.makeSymbolImage()
             button.imagePosition = .imageLeading
             button.target = self
@@ -53,7 +61,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             style: model.settings.menuBarStyle,
             tintsIcon: model.settings.tintsMenuBarIcon
         )
-        guard presentation != lastPresentation, let button = statusItem.button else { return }
+        guard presentation != lastPresentation, let button = statusItem?.button else { return }
         lastPresentation = presentation
 
         if presentation.title.isEmpty {
@@ -88,7 +96,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     }
 
     func showPanel() {
-        guard let button = statusItem.button, !popover.isShown else { return }
+        guard let button = statusItem?.button, !popover.isShown else { return }
         let hosting = NSHostingController(rootView: MenuPanelView().environment(model))
         hosting.sizingOptions = [.preferredContentSize]
         popover.contentViewController = hosting
@@ -147,9 +155,9 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         menu.addItem(.separator())
         menu.addItem(menuItem("About RamLume", #selector(showAbout)))
         menu.addItem(menuItem("Quit RamLume", #selector(quit)))
-        statusItem.menu = menu
-        statusItem.button?.performClick(nil)
-        statusItem.menu = nil
+        statusItem?.menu = menu
+        statusItem?.button?.performClick(nil)
+        statusItem?.menu = nil
     }
 
     private func menuItem(_ title: String, _ action: Selector) -> NSMenuItem {

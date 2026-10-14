@@ -52,6 +52,10 @@ See [docs/architecture.md](docs/architecture.md). In short: system readers and t
   debug-only code.
 - New diagnostics rules need tests for when they fire, when they don't, and their wording
   (for example that no text recommends restarting the Mac).
+- Chart hover: never let anything drawn for the hovered value change the layout of the view that
+  receives hover (see "Chart hover" in [docs/architecture.md](docs/architecture.md)).
+  `HoverLoopRegressionTests` exercises every chart and `DashboardLifecycleTests` the whole
+  dashboard; both start a hidden copy of the app and need a logged-in GUI session.
 
 ## Screenshots
 

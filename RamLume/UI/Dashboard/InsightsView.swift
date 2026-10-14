@@ -59,16 +59,35 @@ struct EventsView: View {
             if events.isEmpty {
                 ContentUnavailableView("No Events Yet", systemImage: "clock", description: Text("Pressure changes, sleep and wake, and other notable moments will appear here."))
             } else {
-                List {
-                    ForEach(sortedDays, id: \.self) { day in
-                        Section(day.formatted(date: .complete, time: .omitted)) {
-                            ForEach(days[day] ?? []) { event in
-                                EventRow(event: event)
+                // A lazy stack rather than `List`: the timeline is read-only, and with a couple of
+                // hundred rows `List`'s table view logged "reentrant operation in its NSTableView
+                // delegate", which AppKit says will become an assertion.
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                        ForEach(sortedDays, id: \.self) { day in
+                            Section {
+                                ForEach(days[day] ?? []) { event in
+                                    EventRow(event: event)
+                                        .padding(.horizontal, 20)
+                                        .padding(.vertical, 7)
+                                    Divider()
+                                        .padding(.leading, 48)
+                                }
+                            } header: {
+                                Text(day.formatted(date: .complete, time: .omitted))
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, 20)
+                                    .padding(.top, 14)
+                                    .padding(.bottom, 6)
+                                    .background(.background)
+                                    .accessibilityAddTraits(.isHeader)
                             }
                         }
                     }
+                    .padding(.bottom, 12)
                 }
-                .listStyle(.inset)
             }
         }
     }

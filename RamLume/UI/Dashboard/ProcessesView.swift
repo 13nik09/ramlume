@@ -129,7 +129,10 @@ struct ProcessesView: View {
     var body: some View {
         @Bindable var settings = app.settings
         let monitor = app.monitor
-        let totalMemory = monitor.snapshot?.breakdown.total ?? 0
+        // Installed memory, from the unobserved state: observing `monitor.snapshot`, which changes
+        // every second, would rebuild and re-sort the whole table each time, although the total
+        // never changes and the process list changes only on a scan.
+        let totalMemory = monitor.current.snapshot?.breakdown.total ?? 0
         Group {
             if let snapshot = monitor.processes {
                 let rows = ProcessTableRow.sorted(

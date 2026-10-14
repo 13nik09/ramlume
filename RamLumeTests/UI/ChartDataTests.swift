@@ -139,3 +139,92 @@ struct ChartDataTests {
         #expect(PressureTimeline.accessibilitySummary([]) == "No data")
     }
 }
+
+/// The crosshair's hover logic. The view writes its state only when `resolve` returns something
+/// different, so these properties are what keep hover from causing extra redraws.
+@Suite("Chart hover")
+struct ChartHoverStateTests {
+    let start = Date(timeIntervalSince1970: 1_790_000_000)
+    /// The plot starts 40 pt in; each point of x is one second after `start`.
+    let plot = CGRect(x: 40, y: 10, width: 800, height: 300)
+    var dates: [Date] { stride(from: 0.0, through: 800, by: 100).map { start.addingTimeInterval($0) } }
+    var gap: HistoryGap { HistoryGap(start: start.addingTimeInterval(320), end: start.addingTimeInterval(480), reason: .appNotRunning) }
+
+    func dateAtX(_ x: CGFloat) -> Date? { start.addingTimeInterval(Double(x)) }
+
+    func resolve(_ location: CGPoint?, dates: [Date]? = nil, gaps: [HistoryGap]? = nil) -> ChartHoverState {
+        ChartHoverState.resolve(location: location, plot: plot, dates: dates ?? self.dates, gaps: gaps ?? [gap], dateAtX: dateAtX)
+    }
+
+    @Test func repeatedIdenticalPositionsAreNotChanges() {
+        let first = resolve(CGPoint(x: 140, y: 100))
+        #expect(first.target == .point(1))
+        for _ in 0..<100 {
+            #expect(resolve(CGPoint(x: 140, y: 100)) == first)
+        }
+        // Moving while staying nearest to the same point isn't a change either.
+        #expect(resolve(CGPoint(x: 152, y: 40)) == first)
+    }
+
+    @Test func enteringLeavingAndEdges() {
+        #expect(resolve(nil) == .idle)
+        #expect(resolve(CGPoint(x: 30, y: 100)) == .idle)
+        #expect(resolve(CGPoint(x: 841, y: 100)) == .idle)
+        #expect(resolve(CGPoint(x: 40, y: 100)).target == .point(0))
+        #expect(resolve(CGPoint(x: 840, y: 100)).target == .point(8))
+    }
+
+    @Test func gapsTargetTheGapAndIgnoreSubPointJitter() {
+        let over = resolve(CGPoint(x: 440.2, y: 100))
+        #expect(over.target == .gap(gap))
+        #expect(over.gapPointerX == 440)
+        #expect(resolve(CGPoint(x: 440.4, y: 100)) == over)
+        #expect(resolve(CGPoint(x: 441, y: 100)) != over)
+        #expect(resolve(CGPoint(x: 359, y: 100)).target == .point(3))
+    }
+
+    @Test func emptyAndSinglePointSeries() {
+        #expect(resolve(CGPoint(x: 400, y: 100), dates: [], gaps: []) == .idle)
+        let single = [start.addingTimeInterval(500)]
+        #expect(resolve(CGPoint(x: 100, y: 100), dates: single, gaps: []).target == .point(0))
+        #expect(resolve(CGPoint(x: 800, y: 100), dates: single, gaps: []).target == .point(0))
+    }
+
+    @Test func noDateOrNoPlotMeansNoTarget() {
+        #expect(ChartHoverState.resolve(location: CGPoint(x: 400, y: 100), plot: plot, dates: dates, gaps: [], dateAtX: { _ in nil }) == .idle)
+        #expect(ChartHoverState.resolve(location: CGPoint(x: 400, y: 100), plot: .zero, dates: dates, gaps: [], dateAtX: dateAtX) == .idle)
+    }
+
+    @Test func aFastSweepWritesOnlyWhenTheTargetChanges() {
+        var state = ChartHoverState.idle
+        var writes = 0
+        var events = 0
+        for x in stride(from: 0.0, through: 900, by: 3) {
+            events += 1
+            let next = resolve(CGPoint(x: x, y: 100))
+            if next != state {
+                state = next
+                writes += 1
+            }
+        }
+        // 9 points, the pointer moving across the 160 pt gap in 3 pt steps, and leaving the plot.
+        #expect(writes <= 9 + 54 + 3)
+        #expect(writes < events / 4)
+    }
+
+    @Test func dataArrivingWhileHovering() {
+        let location = CGPoint(x: 540, y: 100)
+        let before = resolve(location)
+        #expect(before.target == .point(5))
+        // A new sample on the right doesn't change what's under the pointer…
+        #expect(resolve(location, dates: dates + [start.addingTimeInterval(900)]) == before)
+        // …and when the oldest drops off, the same position maps to the shifted index.
+        #expect(resolve(location, dates: Array(dates.dropFirst())).target == .point(4))
+    }
+
+    @Test func rangeChangesResolveIndependentlyOfThePreviousState() {
+        let coarse = stride(from: 0.0, through: 800, by: 400).map { start.addingTimeInterval($0) }
+        #expect(resolve(CGPoint(x: 300, y: 100), dates: coarse, gaps: []).target == .point(1))
+        #expect(resolve(CGPoint(x: 300, y: 100), dates: dates, gaps: []).target == .point(3))
+    }
+}

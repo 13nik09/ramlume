@@ -45,7 +45,7 @@ echo "==> Checking the build"
 ARCHS=$(lipo -archs "$BIN")
 [[ "$ARCHS" == *arm64* && "$ARCHS" == *x86_64* ]] || fail "not a universal binary (found: $ARCHS)"
 if nm -m "$BIN" | grep -q "llvm_profile"; then fail "the binary contains coverage instrumentation"; fi
-if strings "$BIN" | grep -q "RAMLUME-DEBUG"; then fail "the binary contains debug-only code"; fi
+if strings "$BIN" | grep -qE "RAMLUME-DEBUG|HOVERLAB|UISTRESS"; then fail "the binary contains debug-only code"; fi
 "$BIN" --dump-metrics >/dev/null || fail "the built app's metrics report failed"
 echo "    universal ($ARCHS), no instrumentation or debug code, metrics report runs"
 

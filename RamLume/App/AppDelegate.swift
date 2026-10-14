@@ -14,6 +14,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var showDashboardObserver: NSObjectProtocol?
     #if DEBUG
     private var debugPanelWindow: NSWindow?
+    private var hoverLab: HoverLab?
+    private var uiStress: UIStress?
     #endif
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -21,18 +23,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard !RuntimeEnvironment.isRunningTests else { return }
         // One RamLume at a time: a second copy (say, one still in Downloads) would add a second
         // menu bar item and write the same history file.
-        if handOffToRunningInstance() { return }
+        if !Self.isDebugHarness, handOffToRunningInstance() { return }
 
         NSApp.mainMenu = MainMenuBuilder.makeMainMenu(target: self)
         installTerminationSignalHandlers()
 
-        let settings = SettingsStore()
+        let settings = Self.makeSettings()
         AppearanceController.apply(settings.appearance)
         settings.dashboardRange = ChartRange.clamped(settings.dashboardRange, to: settings.historyRetention)
 
         let monitor: MonitoringCoordinator
         #if DEBUG
-        DebugOptions.isDemo = CommandLine.arguments.contains("--demo")
+        // The hover lab and the processes probe use demo readers too, so they never read or write
+        // the history file.
+        DebugOptions.isDemo = ["--demo", "--hover-lab", "--processes-probe"].contains { CommandLine.arguments.contains($0) }
         if DebugOptions.isDemo {
             // Example data for screenshots: no history file is read or written.
             let anchor = Date()
@@ -40,7 +44,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 memoryReader: .success(DemoData.MemoryReader(anchor: anchor)),
                 swapReader: DemoData.SwapReader(anchor: anchor),
                 pressureReader: DemoData.PressureReader(anchor: anchor),
-                processReader: DemoData.ProcessProvider(),
+                processReader: CommandLine.arguments.contains("--processes-probe")
+                    ? ScriptedProcessProvider.shared : DemoData.ProcessProvider(),
                 history: DemoData.makeHistory(anchor: anchor, retention: settings.historyRetention)
             )
         } else {
@@ -114,7 +119,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private static func makeMonitor(settings: SettingsStore) -> MonitoringCoordinator {
         let history = HistoryStore(
             retention: settings.historyRetention,
-            persistence: HistoryPersistence.defaultFileURL().map(HistoryPersistence.init(fileURL:))
+            persistence: historyFileURL().map(HistoryPersistence.init(fileURL:))
         )
         let memoryReader: Result<any MemoryStatisticsProviding, MemoryReadError>
         do {
@@ -135,6 +140,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             processReader: ProcessReader(),
             history: history
         )
+    }
+
+    /// The history file. Debug harnesses record made-up events and clear history, so unless they're
+    /// given a scratch `--history-file` they keep history in memory only.
+    private static func historyFileURL() -> URL? {
+        #if DEBUG
+        if isDebugHarness, !CommandLine.arguments.contains("--history-file") { return nil }
+        #endif
+        return HistoryPersistence.defaultFileURL()
+    }
+
+    /// The person's preferences, except in debug harness runs: those change settings (appearance,
+    /// chart range) while they work, so they use a scratch domain that starts from the defaults on
+    /// every launch, even when the test host has the official bundle identifier.
+    private static func makeSettings() -> SettingsStore {
+        #if DEBUG
+        if isDebugHarness, let identifier = Bundle.main.bundleIdentifier,
+           let defaults = UserDefaults(suiteName: "\(identifier).debug-harness") {
+            defaults.removePersistentDomain(forName: "\(identifier).debug-harness")
+            let settings = SettingsStore(defaults: defaults)
+            settings.hasShownWelcome = true
+            return settings
+        }
+        #endif
+        return SettingsStore()
+    }
+
+    /// Debug harnesses run as separate processes next to a running copy (for example the test
+    /// host), so they skip the single-instance hand-off.
+    private static var isDebugHarness: Bool {
+        #if DEBUG
+        let arguments = CommandLine.arguments
+        return ["--hover-lab", "--ui-stress", "--soak", "--events-probe", "--processes-probe", "--history-file"]
+            .contains { arguments.contains($0) }
+        #else
+        return false
+        #endif
     }
 
     /// Posted by a second copy of RamLume to ask the running one to show its dashboard.
@@ -177,6 +219,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         func value(after flag: String) -> String? {
             guard let index = arguments.firstIndex(of: flag), arguments.indices.contains(index + 1) else { return nil }
             return arguments[index + 1]
+        }
+        // `--ui-stress <cycles>` and `--soak <minutes>`: see UIStress.
+        if let dashboardController, let cycles = value(after: "--ui-stress").flatMap({ Int($0) }) {
+            let stress = UIStress(model: model, dashboard: dashboardController)
+            uiStress = stress
+            Task { await stress.runCycles(cycles) }
+            return true
+        }
+        if let dashboardController, let minutes = value(after: "--soak").flatMap({ Int($0) }) {
+            let stress = UIStress(model: model, dashboard: dashboardController)
+            uiStress = stress
+            Task { await stress.soak(minutes: minutes) }
+            return true
+        }
+        if let dashboardController, arguments.contains("--events-probe") {
+            let stress = UIStress(model: model, dashboard: dashboardController)
+            uiStress = stress
+            Task { await stress.eventsProbe() }
+            return true
+        }
+        if let dashboardController, arguments.contains("--processes-probe") {
+            let stress = UIStress(model: model, dashboard: dashboardController)
+            uiStress = stress
+            Task { await stress.processesProbe() }
+            return true
+        }
+        // `--hover-lab [scenario prefix]`: see HoverLab.
+        if arguments.contains("--hover-lab") {
+            let filter = value(after: "--hover-lab").flatMap { $0.hasPrefix("--") ? nil : $0 }
+            let lab = HoverLab(filter: filter)
+            hoverLab = lab
+            Task { await lab.run() }
+            return true
         }
         // `--test-notification`: the "Allow notifications" flow from Settings, then a test notification.
         if arguments.contains("--test-notification") {

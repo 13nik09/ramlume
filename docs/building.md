@@ -119,7 +119,7 @@ They're compiled out of Release builds (`make-release.sh` checks this).
 | `--panel` | Opens the menu bar panel. |
 | `--panel-window` | Shows the panel's content in a title-less window, which renders even when the menu bar isn't on screen (for example in a full-screen Space). |
 | `--demo` | Example data for screenshots (`RamLume/Debug/DemoData.swift`): no history file is read or written, and no notifications are sent. |
-| `--no-activate` | Opens windows without activating RamLume, so automated screenshots don't take keyboard focus. |
+| `--no-activate` | Opens windows without activating RamLume or adding it to the Dock, so automated screenshots and stress runs don't take keyboard focus or flicker a Dock icon. |
 | `--front` | Floats windows above other apps without activating RamLume. |
 | `--no-mouse` | Windows ignore the pointer, so hover doesn't affect measurements. |
 | `--assume-visible` | Treats the dashboard as on screen even when it's covered or on another Space. |
@@ -127,6 +127,21 @@ They're compiled out of Release builds (`make-release.sh` checks this).
 | `--test-notification` | Runs the "Allow notifications" flow and sends a test notification, printing the result. |
 | `--login-item on\|off\|status` | Calls the same code as the "Open RamLume at login" toggle and prints the resulting state. |
 | `--open-close-cycles <n>` | Opens and closes the dashboard *n* times, cycling through its sections, for leak checks. |
+| `--hover-lab [scenario prefix]` | Runs the chart hover scenarios in an invisible window (see `RamLume/Debug/HoverLab.swift`); used by `HoverLoopRegressionTests`. |
+| `--ui-stress <cycles>` | Repeats the dashboard lifecycle (every section and range, hover, appearance, pause, sleep/wake, pressure flapping) and reports CPU, memory, redraws, main-thread stalls, and whether each closed dashboard was released, per cycle (`RamLume/Debug/UIStress.swift`). |
+| `--soak <minutes>` | Keeps History visible with live sampling and periodic hover; reports once a minute. |
+| `--events-probe` | Shows the Events section with timelines of 5 to 300 events; used by `DashboardLifecycleTests`. |
+| `--processes-probe` | Shows Processes with scripted process lists that change one way per scan, and marks each step, to tie AppKit table warnings to a kind of change. |
+| `--history-file <path>` | Reads and writes history at `path` instead of `~/Library/Application Support/RamLume`. |
+| `--no-status-item` | Runs without a menu bar item, so long stress runs don't flicker one. |
+
+The hover lab, `--ui-stress`, `--soak`, both probes, and any run with `--history-file` are
+*harness runs*. They don't hand off to a running copy of RamLume, start from default settings
+kept in a separate `<bundle identifier>.debug-harness` domain (cleared at every launch), and,
+without `--history-file`, keep history in memory only: the stress runs record made-up events, so
+they never touch your real settings or history file. `RAMLUME_STRESS_HOLD_SECONDS=<n>` keeps a
+`--ui-stress` or `--soak` process idle for *n* seconds after its report, for `leaks`, `heap`, or
+`vmmap`.
 
 `scripts/measure-usage.sh [seconds]` reports RamLume's CPU time and memory footprint over a
 period; see [performance.md](performance.md) for the methodology.
