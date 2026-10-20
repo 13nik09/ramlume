@@ -64,12 +64,15 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         guard presentation != lastPresentation, let button = statusItem?.button else { return }
         lastPresentation = presentation
 
+        // A plain title, not an attributed one: AppKit then draws it in the menu bar's own text
+        // color, light or dark, like the icon. (An attributed title without a color is drawn
+        // black, which is nearly invisible on a dark menu bar.)
+        button.font = NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         if presentation.title.isEmpty {
-            button.attributedTitle = NSAttributedString(string: "")
+            button.title = ""
             button.imagePosition = .imageOnly
         } else {
-            let font = NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
-            button.attributedTitle = NSAttributedString(string: " " + presentation.title, attributes: [.font: font])
+            button.title = " " + presentation.title
             button.imagePosition = .imageLeading
         }
         switch presentation.tint {
