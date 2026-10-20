@@ -8,6 +8,7 @@ struct MonitoringState: Sendable, Equatable {
     var pressure: PressureState = .unknown
     var health: HealthAssessment = .initial
     var insights: [Insight] = []
+    var recommendations: [Recommendation] = []
     var trends: MemoryTrends = .empty
     var processes: ProcessSnapshot?
     var growthFindings: [ProcessGrowthFinding] = []
@@ -39,6 +40,7 @@ final class MonitoringCoordinator {
     private(set) var pressure: PressureState = .unknown
     private(set) var health: HealthAssessment = .initial
     private(set) var insights: [Insight] = []
+    private(set) var recommendations: [Recommendation] = []
     private(set) var trends: MemoryTrends = .empty
     private(set) var processes: ProcessSnapshot?
     private(set) var growthFindings: [ProcessGrowthFinding] = []
@@ -489,6 +491,7 @@ final class MonitoringCoordinator {
             growthFindings: current.growthFindings
         )
         current.insights = DiagnosticsEngine.insights(for: input)
+        current.recommendations = RecommendationEngine.recommendations(for: input)
 
         let top = current.processes?.largestAccessibleGroup.map { (name: $0.displayName, bytes: $0.totalFootprint) }
         let alerts = notificationPolicy.evaluate(
@@ -510,6 +513,7 @@ final class MonitoringCoordinator {
         if pressure != current.pressure { pressure = current.pressure }
         if health != current.health { health = current.health }
         if insights != current.insights { insights = current.insights }
+        if recommendations != current.recommendations { recommendations = current.recommendations }
         if trends != current.trends { trends = current.trends }
         // Process snapshots are immutable per scan; comparing timestamps avoids a deep comparison.
         if processes?.timestamp != current.processes?.timestamp { processes = current.processes }

@@ -73,20 +73,20 @@ private struct PanelContent: View {
         let monitor = app.monitor
         VStack(alignment: .leading, spacing: Metrics.sectionSpacing) {
             if !app.settings.hasShownWelcome {
-                WelcomeNote()
+                WelcomeCard()
             }
             if monitor.isPausedByUser {
                 PausedNote()
             }
             if let snapshot = monitor.snapshot {
-                let figures = MemoryFigures(snapshot)
-                MemorySummaryCard(figures: figures)
-                StatsGrid(figures: figures, pressure: monitor.pressure.level)
-                    .equatable()
-                HealthCard(assessment: monitor.health)
-                    .equatable()
+                HealthSummaryView(
+                    summary: HealthSummary(assessment: monitor.health, figures: MemoryFigures(snapshot), pressure: monitor.pressure.level),
+                    compact: true
+                )
+                .equatable()
+                .card(.panel)
                 TopAppsSection()
-                InsightsSection()
+                RecommendationSection()
             } else {
                 UnavailableCard(error: monitor.readError)
             }
@@ -95,22 +95,41 @@ private struct PanelContent: View {
     }
 }
 
-private struct WelcomeNote: View {
+/// A short, skippable introduction on first launch.
+private struct WelcomeCard: View {
+    @Environment(AppModel.self) private var app
+
     var body: some View {
-        HStack(alignment: .top, spacing: 8) {
-            Image(systemName: "hand.wave")
-                .foregroundStyle(Color.accentColor)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Welcome to RamLume")
-                    .font(.callout.weight(.semibold))
-                Text("RamLume lives in your menu bar. Click the memory chip icon any time to check on your Mac's memory. Everything stays on your Mac.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Welcome to RamLume", systemImage: "hand.wave.fill")
+                .font(.headline)
+                .labelStyle(.titleAndIcon)
+            VStack(alignment: .leading, spacing: 7) {
+                point("memorychip", "RamLume watches your Mac's memory and shows which apps use the most.")
+                point("chart.bar.fill", "High RAM use is normal: macOS keeps memory busy so things open faster.")
+                point("gauge.with.dots.needle.33percent", "Memory pressure shows how hard your Mac is working to make room. That's the number that matters.")
+                point("lightbulb", "When something would help, you'll find it under Recommendations.")
+            }
+            HStack {
+                Spacer()
+                Button("Got It") { app.settings.hasShownWelcome = true }
+                    .controlSize(.small)
             }
         }
         .card(.panel)
+    }
+
+    private func point(_ symbol: String, _ text: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Image(systemName: symbol)
+                .foregroundStyle(Color.accentColor)
+                .frame(width: 18)
+                .accessibilityHidden(true)
+            Text(text)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 }
 
@@ -162,146 +181,37 @@ private struct UnavailableCard: View {
     }
 }
 
-private struct MemorySummaryCard: View {
-    var figures: MemoryFigures
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            PanelHeadline(figures: figures)
-                .equatable()
-            MemoryCompositionBar(figures: figures, height: 8)
-                .equatable()
-            PanelMiniChart()
-                .frame(height: 52)
-                .padding(.top, 2)
-            HStack {
-                Text("Last 5 minutes")
-                Spacer()
-                Text("Used ≈ everything except cached and free")
-            }
-            .font(.caption2)
-            .foregroundStyle(.tertiary)
-        }
-        .card(.panel)
-    }
-}
-
-private struct PanelHeadline: View, Equatable {
-    var figures: MemoryFigures
-
-    nonisolated static func == (lhs: PanelHeadline, rhs: PanelHeadline) -> Bool {
-        lhs.figures.used == rhs.figures.used && lhs.figures.total == rhs.figures.total && lhs.figures.percent == rhs.figures.percent
-    }
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
-            Text(figures.used)
-                .font(.system(size: 26, weight: .semibold))
-            Text("of \(figures.total) in use")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-            Spacer()
-            Text(figures.percent)
-                .font(.title3.weight(.medium))
-                .foregroundStyle(.secondary)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("About \(figures.used) of \(figures.total) in use, \(figures.percent)")
-        .help("Estimated memory in use: App + Wired + Compressed + Reserved — everything except cached files and free memory.")
-    }
-}
-
-/// The last five minutes; refreshes with each new sample while the panel is open.
-private struct PanelMiniChart: View {
-    @Environment(AppModel.self) private var app
-
-    var body: some View {
-        let history = app.monitor.history
-        let _ = history.revision
-        MemoryUsageChart(series: history.history.series(for: .fiveMinutes, now: Date(), maxPoints: 60), style: .compact)
-    }
-}
-
-private struct StatsGrid: View, Equatable {
-    var figures: MemoryFigures
-    var pressure: MemoryPressureLevel?
-
-    var body: some View {
-        let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 3)
-        LazyVGrid(columns: columns, spacing: 8) {
-            StatTile(label: "App", value: figures.app,
-                     provenance: .derived, swatch: Palette.app, help: CompositionSegment.Category.app.help)
-            StatTile(label: "Wired", value: figures.wired,
-                     swatch: Palette.wired, help: CompositionSegment.Category.wired.help)
-            StatTile(label: "Compressed", value: figures.compressed,
-                     caption: figures.compressedOriginal.map { "holds \($0)" },
-                     swatch: Palette.compressed, help: CompositionSegment.Category.compressed.help)
-            StatTile(label: "Cached", value: figures.cached,
-                     caption: "reclaimable", provenance: .estimated, swatch: Palette.cached,
-                     help: CompositionSegment.Category.cached.help)
-            StatTile(label: "Swap", value: figures.swapUsed ?? "—",
-                     caption: figures.swapTotal.map { "\($0) allocated" } ?? "unavailable",
-                     help: "Swap in use, from vm.swapusage. macOS can keep swap allocated after memory demand drops; that's normal.")
-            StatTile(label: "Pressure", value: pressure?.displayName ?? "—", caption: "from macOS",
-                     swatch: Palette.pressure(pressure),
-                     help: "The memory pressure level macOS reports (normal, warning, or critical).")
-        }
-    }
-}
-
-private struct HealthCard: View, Equatable {
-    var assessment: HealthAssessment
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 6) {
-                Image(systemName: assessment.state.symbolName)
-                    .foregroundStyle(Palette.health(assessment.state))
-                    .accessibilityHidden(true)
-                Text(assessment.headline)
-                    .font(.callout.weight(.semibold))
-            }
-            Text(assessment.explanation)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .card(.panel)
-        .accessibilityElement(children: .combine)
-    }
-}
-
 private struct TopAppsSection: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
         let monitor = app.monitor
         VStack(alignment: .leading, spacing: 8) {
-            SectionHeading(
-                title: "Top apps",
-                trailing: monitor.processes.map { "\($0.accessibleCount) of \($0.totalCount) processes measured" }
-            )
-            TopAppsList(snapshot: monitor.processes, totalMemory: monitor.snapshot?.breakdown.total ?? 0, limit: 3)
+            HStack(alignment: .firstTextBaseline) {
+                SectionHeading(title: "Top apps")
+                Button("See All") { app.openDashboard(.applications) }
+                    .buttonStyle(.link)
+                    .font(.caption)
+            }
+            TopAppsList(snapshot: monitor.processes, totalMemory: monitor.current.snapshot?.breakdown.total ?? 0, limit: 3)
         }
     }
 }
 
-private struct InsightsSection: View {
+private struct RecommendationSection: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
-        let all = app.monitor.insights
-        if let first = all.first {
+        let recommendations = app.monitor.recommendations
+        if let first = recommendations.first {
             VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .firstTextBaseline) {
-                    SectionHeading(title: "Insights")
-                    if all.count > 1 {
-                        Button("\(all.count - 1) more") { app.openDashboard(.insights) }
-                            .buttonStyle(.link)
-                            .font(.caption)
-                    }
+                SectionHeading(title: "Recommendation")
+                RecommendationSummaryView(
+                    recommendation: first,
+                    moreCount: recommendations.dropFirst().filter { $0.priority == .tip }.count
+                ) {
+                    app.openDashboard(.recommendations)
                 }
-                InsightRow(insight: first, lineLimit: 4)
             }
         }
     }
@@ -319,8 +229,12 @@ private struct PanelFooter: View {
             }
             .keyboardShortcut("d", modifiers: .command)
             Spacer()
-            Button("Quit") { app.quit() }
-                .keyboardShortcut("q", modifiers: .command)
+            Button {
+                app.openSettings()
+            } label: {
+                Label("Settings", systemImage: "gearshape")
+            }
+            .keyboardShortcut(",", modifiers: .command)
         }
         .controlSize(.regular)
         .padding(.horizontal, 14)

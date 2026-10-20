@@ -82,7 +82,7 @@ enum ProcessGrouper {
                 groups.append(ProcessGroup(
                     id: "exe:" + path,
                     kind: .sharedExecutable(path: path),
-                    displayName: first.name,
+                    displayName: KnownApplications.friendlyName(forExecutableName: first.name) ?? first.name,
                     bundleIdentifier: nil,
                     processes: sortedMembers(members)
                 ))
@@ -95,7 +95,7 @@ enum ProcessGrouper {
             groups.append(ProcessGroup(
                 id: "pid:\(record.pid)",
                 kind: .single,
-                displayName: record.name,
+                displayName: KnownApplications.friendlyName(forExecutableName: record.name) ?? record.name,
                 bundleIdentifier: nil,
                 processes: [record]
             ))

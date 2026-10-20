@@ -9,6 +9,7 @@ struct DashboardView: View {
             List(selection: $app.dashboardSection) {
                 ForEach(DashboardSection.allCases) { section in
                     Label(section.title, systemImage: section.symbolName)
+                        .badge(section == .recommendations ? actionableCount : 0)
                         .tag(section)
                 }
             }
@@ -23,6 +24,11 @@ struct DashboardView: View {
         }
         .navigationTitle(app.dashboardSection?.title ?? "RamLume")
         .toolbar {
+            if app.dashboardSection == .advanced {
+                ToolbarItem(placement: .principal) {
+                    AdvancedPagePicker()
+                }
+            }
             if usesRange {
                 ToolbarItem(placement: .primaryAction) {
                     RangePicker()
@@ -40,22 +46,26 @@ struct DashboardView: View {
         }
     }
 
+    /// Suggestions worth acting on, for the sidebar badge.
+    private var actionableCount: Int {
+        app.monitor.recommendations.filter(\.priority.isActionable).count
+    }
+
     private var usesRange: Bool {
-        switch app.dashboardSection {
-        case .overview?, .history?: true
-        default: false
+        switch app.dashboardSection ?? .home {
+        case .home: true
+        case .advanced: app.advancedPage == .history
+        case .applications, .recommendations: false
         }
     }
 
     @ViewBuilder
     private var detail: some View {
-        switch app.dashboardSection ?? .overview {
-        case .overview: OverviewView()
-        case .history: HistoryView()
-        case .processes: ProcessesView()
-        case .insights: InsightsView()
-        case .events: EventsView()
-        case .metrics: MetricsGuideView()
+        switch app.dashboardSection ?? .home {
+        case .home: HomeView()
+        case .applications: ProcessesView()
+        case .recommendations: RecommendationsView()
+        case .advanced: AdvancedView()
         }
     }
 }

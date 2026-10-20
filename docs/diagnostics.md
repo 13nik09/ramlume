@@ -44,6 +44,36 @@ Evaluated in order; the first matching rule wins.
 | Elevated | Pressure is normal, but ≥ 256 MB was written to swap in the last 5 minutes ("Heavy swapping" at ≥ 1 GB), or pressure was elevated within the last 10 minutes ("Recovering") | Amber |
 | Healthy | Pressure is normal and none of the above apply | Green |
 
+The interface shows four labels: **Healthy**, **Elevated**, **High Pressure** (Under pressure and
+Critical, told apart by color and wording), and **Checking** (Insufficient data), each with a plain
+sentence such as "Your Mac is running smoothly." Short swings don't flip the state: pressure
+counts as sustained only after 2 minutes, and the state stays Elevated for 10 minutes after
+pressure returns to normal.
+
+## Recommendations
+
+`RecommendationEngine` turns the same input as the insights into tips with a title, a plain
+explanation, the reason, a suggested action, step-by-step instructions, and optional actions
+(View Applications, Open Activity Monitor, Open Login Items Settings, Learn More). It runs once
+per sample in the coordinator, never per redraw, and it's fully offline and deterministic.
+
+| Recommendation | Priority | When |
+|---|---|---|
+| Free up memory now | Urgent | macOS reports critical pressure |
+| Reduce memory use | Important | Warning pressure for ≥ 2 min; mentions swapping when swap is growing, and names the largest apps |
+| Memory is getting tight | Suggested | Warning pressure for less than 2 min |
+| *Browser* is using *size* | Optional, or Suggested while memory is tight | A known browser among the three largest apps, using ≥ 1 GB and ≥ 8 % of RAM; includes the browser's own Memory Saver or sleeping-tabs steps where it has them |
+| *App* is using *size* | Optional, or Suggested while memory is tight | The largest app (not a browser) uses ≥ 1.5 GB and ≥ 10 % of RAM and RamLume has a tip for it |
+| *App*'s memory keeps growing | Optional, or Suggested while memory is tight | A growth finding (see below); suggests reopening the app if it becomes slow, without diagnosing a leak |
+| Review apps that run in the background | Optional | Memory is tight; explains where Login Items are and opens that settings page |
+| Your Mac used swap recently | Optional | ≥ 256 MB written to swap in 5 minutes while pressure is normal |
+| Swap in use is normal here | Status | Swap allocated but quiet while pressure is normal; says no restart is needed |
+| Your Mac is managing memory normally / Checking / Your Mac is coping | Status | Shown first whenever nothing above asks for action |
+
+Nothing is suggested while a Mac is healthy, apart from optional tips about large or growing apps.
+RamLume never suggests restarting to clear swap, never "cleans" memory, and never quits apps or
+changes settings itself.
+
 ### How long pressure has lasted
 
 The duration RamLume reports is the time since pressure last became warning *or worse*:

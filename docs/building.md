@@ -114,7 +114,7 @@ They're compiled out of Release builds (`make-release.sh` checks this).
 
 | Argument | Effect |
 |---|---|
-| `--dashboard <section>` | Opens the dashboard at `overview`, `history`, `processes`, `insights`, `events`, or `metrics`. |
+| `--dashboard <section>` | Opens the dashboard at `home`, `applications`, `recommendations`, or `advanced`. |
 | `--settings <tab>` | Opens Settings at `general`, `monitoring`, `notifications`, `history`, or `about`. |
 | `--panel` | Opens the menu bar panel. |
 | `--panel-window` | Shows the panel's content in a title-less window, which renders even when the menu bar isn't on screen (for example in a full-screen Space). |

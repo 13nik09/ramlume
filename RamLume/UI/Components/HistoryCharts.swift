@@ -54,9 +54,11 @@ private struct GapBands: ChartContent {
 
 struct MemoryUsageChart: View {
     enum Style {
-        /// Single "used" series, no axes. For the menu bar panel.
+        /// Single "used" series, no axes.
         case compact
-        /// Stacked composition with axes. For the dashboard.
+        /// Single "used" series with axes and gaps. For Home.
+        case simple
+        /// Stacked composition with axes. For the detailed history.
         case full
     }
 
@@ -67,11 +69,11 @@ struct MemoryUsageChart: View {
         let total = Double(series.totalMemory ?? 0)
         Chart {
             // At panel size the broken line already shows missing data; bands would only add noise.
-            if style == .full {
+            if style != .compact {
                 GapBands(gaps: series.gaps)
             }
             switch style {
-            case .compact: compactMarks
+            case .compact, .simple: compactMarks
             case .full: stackedMarks
             }
         }
@@ -79,10 +81,10 @@ struct MemoryUsageChart: View {
         .chartYScale(domain: 0...max(total, 1))
         .chartLegend(.hidden)
         .chartXAxis {
-            if style == .full { timeAxis(series.range) }
+            if style != .compact { timeAxis(series.range) }
         }
         .chartYAxis {
-            if style == .full { byteAxis(maximum: total) }
+            if style != .compact { byteAxis(maximum: total) }
         }
         .chartOverlay { proxy in
             ChartCrosshair(
@@ -90,7 +92,7 @@ struct MemoryUsageChart: View {
                 dates: series.points.map(\.date),
                 gaps: series.gaps,
                 markerValue: { series.points[$0].point.used },
-                markerColor: style == .compact ? Palette.app : Palette.compressed
+                markerColor: style == .full ? Palette.compressed : Palette.app
             ) { target in
                 switch target {
                 case .point(let index):
@@ -161,7 +163,7 @@ struct MemoryUsageChart: View {
 
     private func tooltipRows(_ point: HistoryPoint) -> [ChartTooltip.Row] {
         let total = MemoryFormatter.string(fromBytes: point.total, style: .compact)
-        var rows = [ChartTooltip.Row(label: "used of \(total)", value: MemoryFormatter.string(fromBytes: point.used), color: style == .compact ? Palette.app : nil)]
+        var rows = [ChartTooltip.Row(label: "used of \(total)", value: MemoryFormatter.string(fromBytes: point.used), color: style == .full ? nil : Palette.app)]
         if style == .full {
             rows.append(.init(label: "Compressed", value: MemoryFormatter.string(fromBytes: point.compressed), color: Palette.compressed))
             rows.append(.init(label: "Wired", value: MemoryFormatter.string(fromBytes: point.wired), color: Palette.wired))

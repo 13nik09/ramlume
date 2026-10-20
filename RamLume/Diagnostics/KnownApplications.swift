@@ -87,3 +87,87 @@ enum KnownApplications {
         ),
     ]
 }
+
+/// Browsers RamLume can give specific advice for, matched by bundle identifier.
+enum KnownBrowser: Sendable, Equatable {
+    case brave
+    case chrome
+    case edge
+    case firefox
+    case safari
+    case otherChromium
+
+    /// How to turn on the browser's own setting that releases memory held by inactive tabs, if
+    /// it has one.
+    var memorySaverSteps: [String]? {
+        switch self {
+        case .brave:
+            [
+                "In Brave, open Settings (Brave › Settings, or press ⌘,).",
+                "Choose System, then find Performance.",
+                "Turn on Memory Saver. If you don't see it, type “memory saver” in the settings search field.",
+            ]
+        case .chrome:
+            [
+                "In Chrome, open Settings (Chrome › Settings, or press ⌘,).",
+                "Choose Performance.",
+                "Turn on Memory Saver.",
+            ]
+        case .edge:
+            [
+                "In Edge, open Settings (Microsoft Edge › Settings, or press ⌘,).",
+                "Choose System and performance.",
+                "Turn on “Save resources with sleeping tabs”. If you don't see it, search Settings for “sleeping tabs”.",
+            ]
+        case .firefox:
+            [
+                "Type about:unloads in Firefox's address bar to unload tabs you aren't using; they reload when you open them again.",
+            ]
+        case .safari, .otherChromium:
+            nil
+        }
+    }
+
+    /// The name of that setting, for one-line summaries.
+    var memorySaverName: String? {
+        switch self {
+        case .brave, .chrome: "Memory Saver"
+        case .edge: "sleeping tabs"
+        case .firefox, .safari, .otherChromium: nil
+        }
+    }
+}
+
+extension KnownApplications {
+    static func browser(forBundleIdentifier bundleIdentifier: String?) -> KnownBrowser? {
+        guard let bundleIdentifier else { return nil }
+        return browsers[bundleIdentifier]
+    }
+
+    private static let browsers: [String: KnownBrowser] = {
+        var table: [String: KnownBrowser] = [:]
+        for id in ["com.brave.Browser", "com.brave.Browser.beta", "com.brave.Browser.nightly"] { table[id] = .brave }
+        for id in ["com.google.Chrome", "com.google.Chrome.beta", "com.google.Chrome.dev", "com.google.Chrome.canary"] { table[id] = .chrome }
+        for id in ["com.microsoft.edgemac", "com.microsoft.edgemac.Beta", "com.microsoft.edgemac.Dev", "com.microsoft.edgemac.Canary"] { table[id] = .edge }
+        for id in ["org.mozilla.firefox", "org.mozilla.firefoxdeveloperedition", "org.mozilla.nightly"] { table[id] = .firefox }
+        for id in ["com.apple.Safari", "com.apple.SafariTechnologyPreview"] { table[id] = .safari }
+        for id in ["com.vivaldi.Vivaldi", "com.operasoftware.Opera", "org.chromium.Chromium", "company.thebrowser.Browser"] { table[id] = .otherChromium }
+        return table
+    }()
+}
+
+extension KnownApplications {
+    /// Plain names for system services whose executable names mean little to most people. The
+    /// name never claims an owner: WebKit's processes serve Safari and every other app that shows
+    /// web content, and RamLume can't tell which.
+    static func friendlyName(forExecutableName name: String) -> String? {
+        friendlyNames[name]
+    }
+
+    private static let friendlyNames: [String: String] = [
+        "com.apple.WebKit.WebContent": "Web pages (WebKit)",
+        "com.apple.WebKit.GPU": "Web graphics (WebKit)",
+        "com.apple.WebKit.Networking": "Web networking (WebKit)",
+    ]
+}
+

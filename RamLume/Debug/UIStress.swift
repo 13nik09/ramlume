@@ -46,14 +46,19 @@ final class UIStress {
             let wallStart = ProcessInfo.processInfo.systemUptime
 
             step("open")
-            model.openDashboard(.overview)
+            model.openDashboard(.home)
             await settle(0.4)
             for section in DashboardSection.allCases {
                 step("section \(section.rawValue)")
                 model.openDashboard(section)
                 await settle(0.15)
             }
-            model.openDashboard(.history)
+            for page in AdvancedPage.allCases {
+                step("advanced \(page.rawValue)")
+                model.showAdvanced(page)
+                await settle(0.15)
+            }
+            model.showAdvanced(.history)
             for range in ChartRange.available(for: model.settings.historyRetention) {
                 step("range \(range.rawValue)")
                 model.settings.dashboardRange = range
@@ -66,10 +71,10 @@ final class UIStress {
             let hovers = ProcessInfo.processInfo.environment["RAMLUME_STRESS_HOVER"] != "0"
             step("hover history")
             if hovers { await hoverSweep() }
-            step("overview")
-            model.openDashboard(.overview)
+            step("home")
+            model.openDashboard(.home)
             await settle(0.2)
-            step("hover overview")
+            step("hover home")
             if hovers { await hoverSweep() }
             for appearance in [AppearancePreference.dark, .light, .system] {
                 step("appearance \(appearance.rawValue)")
@@ -101,7 +106,7 @@ final class UIStress {
             // being built.
             step("rapid open and close")
             for _ in 0..<10 {
-                model.openDashboard(.history)
+                model.showAdvanced(.history)
                 await settle(0.02)
                 closedDashboards.append(WeakView(view: dashboard.debugHostingView))
                 dashboard.close()
@@ -187,9 +192,9 @@ final class UIStress {
                                            detail: "Changed as reported by macOS.", pressure: level))
             }
             print("EVENTSPROBE events=\(count) show")
-            model.openDashboard(.overview)
+            model.openDashboard(.home)
             await settle(0.4)
-            model.openDashboard(.events)
+            model.showAdvanced(.events)
             await settle(0.6)
             print("EVENTSPROBE events=\(count) close")
             dashboard.close()
@@ -210,7 +215,7 @@ final class UIStress {
     /// `Table` applies the change. Structural changes to a short list (groups gaining or losing
     /// members, processes moving between groups) don't.
     func processesProbe() async {
-        model.openDashboard(.processes)
+        model.openDashboard(.applications)
         await settle(1)
         for round in 1...3 {
             for (index, step) in ScriptedProcessProvider.steps.enumerated() {
@@ -230,7 +235,7 @@ final class UIStress {
         watchdog.start()
         print("UISOAK minutes=\(minutes)")
         model.settings.dashboardRange = .fifteenMinutes
-        model.openDashboard(.history)
+        model.showAdvanced(.history)
         await settle(2)
         let start = ProcessInfo.processInfo.systemUptime
         var worstStall = HoverLab.Watchdog.Stall()

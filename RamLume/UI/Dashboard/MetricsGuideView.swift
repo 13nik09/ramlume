@@ -9,6 +9,17 @@ struct MetricsGuideView: View {
         let snapshot = app.monitor.snapshot
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                DashboardCard("In plain English", subtitle: "What the words in RamLume mean") {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 260), spacing: 20, alignment: .top)], alignment: .leading, spacing: 16) {
+                        ForEach(MemoryTerm.allCases) { term in
+                            TermExplanation(term: term)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                }
+
+                ReadingTheSignsCard()
+
                 DashboardCard("How RamLume measures memory") {
                     Text("RamLume reads statistics directly from the macOS kernel (`host_statistics64`, `sysctl`) without running command-line tools, administrator privileges, or private frameworks. Values marked ≈ are estimates. Activity Monitor's Memory Used, Cached Files, and Memory Pressure graph use Apple's own unpublished calculations, so RamLume's estimates can differ slightly from them.")
                         .foregroundStyle(.secondary)

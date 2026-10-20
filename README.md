@@ -30,23 +30,25 @@ attention. It never sells you a "RAM cleaner".
 
 - **Menu bar monitoring**: a memory-chip icon with an optional percentage or used/total, tinted
   only when memory genuinely needs attention (never because of a percentage).
-- **A native panel**: memory in use, a composition bar (App, Wired, Compressed, Reserved, Cached,
-  Free), a live five-minute chart, swap, the pressure level macOS reports, the largest apps, and
-  the most relevant insight.
-- **Accurate, explained figures**: every value is labelled as measured, derived, or estimated,
-  and the formulas are documented. The categories add up exactly to installed memory.
-- **Health assessment**: Healthy, Elevated, Under pressure, Critical, or Insufficient data, based
-  on the kernel's pressure level and measured swap activity. High usage alone never counts
-  against you.
-- **History**: stacked memory usage, compression, swap, swap activity, and the pressure level
-  over 5 minutes, 15 minutes, 1 hour, 24 hours, or 7 days. Gaps (sleep, pauses, time RamLume
-  wasn't running) are shown as gaps, never filled in. Every chart has a table view.
-- **Processes**: physical footprint per process (the same metric as Activity Monitor), grouped
-  by app bundle (a browser's renderer and GPU helpers appear under the browser), with search,
-  sorting, details, and honest "Restricted" labels for processes macOS doesn't let it read.
-- **Insights**: deterministic, rule-based explanations: why high usage is fine, why allocated
-  swap isn't necessarily a problem, when pressure is sustained, which app is largest (with
-  app-specific tips), and when an app's memory keeps growing (with cautious wording).
+- **A simple panel**: your Mac's status in one sentence ("Your Mac is running smoothly."), memory
+  in use with a single bar, the three apps using the most memory, and one recommendation.
+- **Three questions, answered first**: the dashboard opens on Home (is my Mac healthy, which apps
+  use my RAM, what should I do?), with Applications and Recommendations one click away.
+- **Recommendations**: offline, rule-based tips with the reason, the suggested action, and
+  step-by-step instructions, for example turning on Memory Saver in Brave or Chrome, reviewing
+  login items, or quitting apps while memory pressure is high. When nothing needs doing, RamLume
+  says so; it never suggests restarting to clear swap and never "cleans" memory or quits apps.
+- **Health status**: Healthy, Elevated, High Pressure, or Checking, based on the kernel's pressure
+  level and measured swap activity. High usage alone never counts against you.
+- **Applications**: physical footprint per app (the same metric as Activity Monitor), grouped
+  with its helper processes (a browser's renderer and GPU helpers appear under the browser),
+  with search, sorting, details, and honest "Restricted" labels for processes macOS doesn't let
+  it read.
+- **Advanced Details**: the full memory breakdown (App, Wired, Compressed, Reserved, Cached,
+  Free), every insight with its evidence, history charts (memory, compression, swap, swap
+  activity, pressure) over 5 minutes to 7 days with gaps shown as gaps and a table view, the
+  event timeline, and plain-English definitions next to the exact formulas. Every value is
+  labelled as measured, derived, or estimated, and the categories add up to installed memory.
 - **Notifications (opt-in)** for critical or sustained pressure, rapid swap growth, and steady
   app memory growth, with cooldowns. Off by default.
 - **Light on resources**: about 0.1 % of one CPU core and a 17 MB memory footprint while it sits
@@ -57,6 +59,9 @@ attention. It never sells you a "RAM cleaner".
   awareness, light/dark/system appearance, VoiceOver labels, and Reduce Motion support.
 
 ## Screenshots
+
+<!-- These show the dashboard before the simplified navigation (Home, Applications,
+Recommendations, Advanced Details); they need retaking. -->
 
 | Menu bar panel | History |
 |---|---|

@@ -34,6 +34,24 @@ First public version. Release notes: [docs/release-notes/v0.1.0.md](docs/release
 - `scripts/make-release.sh`: universal release archive with build checks, checksum, and optional
   Developer ID signing and notarization.
 
+### Changed (before the first release)
+
+- Simpler navigation: Home, Applications, Recommendations, and Advanced Details. Home answers
+  "Is my Mac healthy?", "Which apps use my RAM?", and "What should I do?"; the technical pages
+  (memory breakdown, history, events, definitions) live under Advanced Details.
+- The menu bar panel shows the status in one sentence, memory in use with one bar, the three
+  largest apps, and one recommendation, instead of a grid of statistics and a chart.
+- Health labels are Healthy, Elevated, High Pressure, and Checking, with plain-English sentences;
+  memory terms have short explanations behind info buttons and on the Definitions page.
+- A shorter welcome card explains what RamLume watches and why high RAM use can be normal.
+- WebKit's shared processes are listed as "Web pages (WebKit)" rather than by executable name.
+
+### Added (before the first release)
+
+- Recommendations: offline, rule-based tips with the reason, a suggested action, step-by-step
+  instructions (such as turning on Memory Saver in Brave or Chrome), and buttons that open
+  Applications, Activity Monitor, or Login Items settings.
+
 ### Fixed (before the first release)
 
 - Resting the pointer on a history chart could make RamLume spin at 100% of a CPU core and stop

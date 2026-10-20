@@ -1,39 +1,38 @@
 import SwiftUI
 
-struct InsightsView: View {
+/// Every insight, with the evidence behind it.
+struct AllInsightsCard: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
         let monitor = app.monitor
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                HealthDetailCard(assessment: monitor.health)
-
-                DashboardCard("Insights", subtitle: "Plain-English explanations generated from your Mac's measurements") {
-                    if monitor.insights.isEmpty {
-                        Text(monitor.snapshot == nil ? "Insights appear once RamLume has measurements." : "Nothing to report right now.")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        VStack(alignment: .leading, spacing: 14) {
-                            ForEach(Array(monitor.insights.enumerated()), id: \.element.id) { index, insight in
-                                if index > 0 { Divider() }
-                                InsightRow(insight: insight, showsEvidence: true)
-                            }
-                        }
-                    }
-                }
-
-                DashboardCard("How RamLume reads the signs") {
-                    VStack(alignment: .leading, spacing: 8) {
-                        principle("High usage alone isn't a problem.", "macOS deliberately keeps memory busy with apps and file caches. A Mac using 12 GB of 16 GB with normal pressure is working as designed.")
-                        principle("Memory pressure comes from macOS.", "RamLume shows the pressure level macOS reports (normal, warning, critical). Its own health rating adds recent swap activity and is labelled as an assessment.")
-                        principle("Compression is normal.", "Compressing inactive memory is faster than swapping. RamLume only treats it as a concern when swapping and pressure rise with it.")
-                        principle("Allocated swap isn't always active swapping.", "macOS can keep swapped-out data after a busy period. RamLume looks at how much is being written right now.")
-                        principle("No restart advice for normal swap.", "Restarting to clear swap is rarely useful; RamLume won't suggest it.")
+        DashboardCard("Insights", subtitle: "Plain-English explanations generated from your Mac's measurements") {
+            if monitor.insights.isEmpty {
+                Text(monitor.snapshot == nil ? "Insights appear once RamLume has measurements." : "Nothing to report right now.")
+                    .foregroundStyle(.secondary)
+            } else {
+                VStack(alignment: .leading, spacing: 14) {
+                    ForEach(Array(monitor.insights.enumerated()), id: \.element.id) { index, insight in
+                        if index > 0 { Divider() }
+                        InsightRow(insight: insight, showsEvidence: true)
                     }
                 }
             }
-            .padding(20)
+        }
+    }
+}
+
+/// The principles behind RamLume's assessments.
+struct ReadingTheSignsCard: View {
+    var body: some View {
+        DashboardCard("How RamLume reads the signs") {
+            VStack(alignment: .leading, spacing: 8) {
+                principle("High usage alone isn't a problem.", "macOS deliberately keeps memory busy with apps and file caches. A Mac using 12 GB of 16 GB with normal pressure is working as designed.")
+                principle("Memory pressure comes from macOS.", "RamLume shows the pressure level macOS reports (normal, warning, critical). Its own status adds recent swap activity and is labelled as an assessment.")
+                principle("Compression is normal.", "Compressing inactive memory is faster than swapping. RamLume only treats it as a concern when swapping and pressure rise with it.")
+                principle("Swap in use isn't always active swapping.", "macOS can keep swapped-out data after a busy period. RamLume looks at how much is being written right now.")
+                principle("No restart advice for normal swap.", "Restarting to clear swap is rarely useful; RamLume won't suggest it.")
+            }
         }
     }
 

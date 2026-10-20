@@ -1,35 +1,49 @@
 import AppKit
 import Observation
 
+/// The dashboard's sections: three for everyone, plus the technical detail behind them.
 enum DashboardSection: String, CaseIterable, Identifiable, Sendable {
-    case overview
-    case history
-    case processes
-    case insights
-    case events
-    case metrics
+    case home
+    case applications
+    case recommendations
+    case advanced
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .overview: "Overview"
-        case .history: "History"
-        case .processes: "Processes"
-        case .insights: "Insights"
-        case .events: "Events"
-        case .metrics: "About the Numbers"
+        case .home: "Home"
+        case .applications: "Applications"
+        case .recommendations: "Recommendations"
+        case .advanced: "Advanced Details"
         }
     }
 
     var symbolName: String {
         switch self {
-        case .overview: "square.grid.2x2"
-        case .history: "chart.xyaxis.line"
-        case .processes: "list.bullet.rectangle"
-        case .insights: "lightbulb"
-        case .events: "clock.arrow.circlepath"
-        case .metrics: "function"
+        case .home: "house"
+        case .applications: "square.grid.2x2"
+        case .recommendations: "lightbulb"
+        case .advanced: "slider.horizontal.3"
+        }
+    }
+}
+
+/// Pages inside Advanced Details.
+enum AdvancedPage: String, CaseIterable, Identifiable, Sendable {
+    case memory
+    case history
+    case events
+    case definitions
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .memory: "Memory"
+        case .history: "History"
+        case .events: "Events"
+        case .definitions: "Definitions"
         }
     }
 }
@@ -52,7 +66,8 @@ final class AppModel {
     let notifications: NotificationService
     let launchAtLogin: LaunchAtLoginService
 
-    var dashboardSection: DashboardSection? = .overview
+    var dashboardSection: DashboardSection? = .home
+    var advancedPage: AdvancedPage = .memory
     /// Set when notification permission was refused, to explain what happened in Settings.
     var notificationPermissionDenied = false
 
@@ -72,6 +87,33 @@ final class AppModel {
     func openDashboard(_ section: DashboardSection? = nil) {
         closePanelHandler?()
         openDashboardHandler?(section)
+    }
+
+    /// Opens Advanced Details at `page`.
+    func showAdvanced(_ page: AdvancedPage) {
+        advancedPage = page
+        openDashboard(.advanced)
+    }
+
+    /// Carries out a recommendation's action. Actions only navigate or open Apple's own tools;
+    /// none of them changes system settings or ends a process.
+    func perform(_ action: Recommendation.Action) {
+        switch action {
+        case .viewApplications:
+            openDashboard(.applications)
+        case .viewMemoryDetails:
+            showAdvanced(.definitions)
+        case .openActivityMonitor:
+            closePanelHandler?()
+            if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.ActivityMonitor") {
+                NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
+            }
+        case .openLoginItemsSettings:
+            closePanelHandler?()
+            if let url = URL(string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension") {
+                NSWorkspace.shared.open(url)
+            }
+        }
     }
 
     func openSettings(_ tab: SettingsTab? = nil) {

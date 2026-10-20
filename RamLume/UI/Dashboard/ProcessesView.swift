@@ -124,7 +124,8 @@ struct ProcessesView: View {
     @State private var query = ""
     @State private var selection: ProcessTableRow.ID?
     @State private var sortOrder = [KeyPathComparator(\ProcessTableRow.footprintSortKey, order: .reverse)]
-    @State private var showsInspector = true
+    /// Hidden until a row is selected, so the list itself stays simple.
+    @State private var showsInspector = false
 
     var body: some View {
         @Bindable var settings = app.settings
@@ -149,11 +150,14 @@ struct ProcessesView: View {
                         .inspectorColumnWidth(min: 240, ideal: 280, max: 360)
                 }
             } else {
-                ProgressView("Scanning processes…")
+                ProgressView("Finding running apps…")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .searchable(text: $query, placement: .toolbar, prompt: "Search processes")
+        .onChange(of: selection) { _, newValue in
+            if newValue != nil { showsInspector = true }
+        }
+        .searchable(text: $query, placement: .toolbar, prompt: "Search applications")
         .toolbar {
             ToolbarItem {
                 Toggle(isOn: $settings.showsRestrictedProcesses) {
@@ -190,7 +194,7 @@ private struct ProcessTable: View {
 
     var body: some View {
         Table(rows, children: \.children, selection: $selection, sortOrder: $sortOrder) {
-            TableColumn("Name", value: \.name) { row in
+            TableColumn("Application", value: \.name) { row in
                 HStack(spacing: 6) {
                     ProcessIcon(path: row.iconPath, size: 16)
                     Text(row.name)
@@ -225,18 +229,6 @@ private struct ProcessTable: View {
             }
             .width(min: 60, ideal: 70)
 
-            TableColumn("PID", value: \.pidSortKey) { row in
-                Text(row.pid.map { String($0) } ?? "")
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-            }
-            .width(min: 50, ideal: 64)
-
-            TableColumn("User", value: \.userSortKey) { row in
-                Text(row.userName ?? "")
-                    .foregroundStyle(.secondary)
-            }
-            .width(min: 60, ideal: 90)
         }
     }
 }
@@ -277,7 +269,7 @@ private struct ProcessFooter: View {
             Image(systemName: "info.circle")
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
-            Text("\(snapshot.accessibleCount) of \(snapshot.totalCount) processes measured · \(snapshot.restrictedCount) restricted · Memory is physical footprint, as in Activity Monitor")
+            Text("Apps are grouped with their helper processes · \(snapshot.accessibleCount) of \(snapshot.totalCount) processes measured · same measure as Activity Monitor")
                 .lineLimit(1)
                 .truncationMode(.tail)
             Spacer(minLength: 8)

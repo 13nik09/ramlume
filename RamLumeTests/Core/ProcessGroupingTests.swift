@@ -51,7 +51,8 @@ struct ProcessGroupingTests {
         let webKit = try #require(snapshot.groups.first { $0.processes.count == 3 })
         #expect(webKit.kind == .sharedExecutable(path: Fixtures.webContent))
         #expect(webKit.bundleIdentifier == nil)
-        #expect(webKit.displayName == "com.apple.WebKit.WebContent")
+        // A plain name that doesn't claim Safari (or any app) as the owner.
+        #expect(webKit.displayName == "Web pages (WebKit)")
         let single = try #require(snapshot.groups.first { $0.id == "pid:400" })
         #expect(single.kind == .single)
     }

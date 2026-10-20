@@ -1,6 +1,7 @@
 import SwiftUI
 
-struct OverviewView: View {
+/// Advanced Details › Memory: the full breakdown, RamLume's evidence, and every insight.
+struct MemoryDetailsView: View {
     @Environment(AppModel.self) private var app
 
     var body: some View {
@@ -15,13 +16,9 @@ struct OverviewView: View {
                         HealthDetailCard(assessment: monitor.health)
                             .equatable()
                     }
-                    UsageHistoryCard()
                     KeyFiguresGrid(model: KeyFigures(figures: figures, pressure: monitor.pressure, trends: monitor.trends))
                         .equatable()
-                    AdaptiveRow(threshold: 760) {
-                        TopAppsCard()
-                        InsightsSummaryCard()
-                    }
+                    AllInsightsCard()
                 } else {
                     DashboardUnavailableView(error: monitor.readError)
                 }
@@ -125,34 +122,6 @@ struct HealthDetailCard: View, Equatable {
     }
 }
 
-private struct UsageHistoryCard: View {
-    @Environment(AppModel.self) private var app
-
-    var body: some View {
-        let range = app.settings.dashboardRange
-        DashboardCard("Memory usage", subtitle: range.accessibilityTitle) {
-            HistorySeriesReader(range: range) { series in
-                VStack(alignment: .leading, spacing: 8) {
-                    MemoryUsageChart(series: series, style: .full)
-                        .frame(height: 220)
-                    HStack(spacing: 14) {
-                        LegendItem(title: "App", color: Palette.app)
-                        LegendItem(title: "Wired", color: Palette.wired)
-                        LegendItem(title: "Compressed", color: Palette.compressed)
-                        LegendItem(title: "Reserved", color: Palette.reserved)
-                        if !series.gaps.isEmpty {
-                            LegendItem(title: "No data", color: Color.secondary.opacity(0.25))
-                        }
-                        Spacer()
-                        Text("Stacked; the top line is estimated use")
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
-                    }
-                }
-            }
-        }
-    }
-}
 
 /// The values shown in the key-figures grid, formatted.
 struct KeyFigures: Equatable {
@@ -212,43 +181,6 @@ private struct KeyFiguresGrid: View, Equatable {
                      swatch: Palette.cached, help: CompositionSegment.Category.cached.help, context: .window)
             StatTile(label: "Free", value: model.free, caption: model.freeCaption,
                      help: "Pages not in use at all. The caption shows kern.memorystatus_level, the kernel's own availability percentage.", context: .window)
-        }
-    }
-}
-
-private struct TopAppsCard: View {
-    @Environment(AppModel.self) private var app
-
-    var body: some View {
-        let monitor = app.monitor
-        DashboardCard("Top apps", subtitle: monitor.processes.map { "Physical footprint · \($0.accessibleCount) of \($0.totalCount) processes measurable" }, accessory: {
-            Button("All Processes") { app.dashboardSection = .processes }
-                .controlSize(.small)
-        }) {
-            TopAppsList(snapshot: monitor.processes, totalMemory: monitor.snapshot?.breakdown.total ?? 0, limit: 6, iconSize: 20)
-        }
-    }
-}
-
-private struct InsightsSummaryCard: View {
-    @Environment(AppModel.self) private var app
-
-    var body: some View {
-        let insights = app.monitor.insights
-        DashboardCard("Insights", accessory: {
-            Button("Details") { app.dashboardSection = .insights }
-                .controlSize(.small)
-        }) {
-            if insights.isEmpty {
-                Text("Nothing to report right now.")
-                    .foregroundStyle(.secondary)
-            } else {
-                VStack(alignment: .leading, spacing: 12) {
-                    ForEach(insights.prefix(3)) { insight in
-                        InsightRow(insight: insight)
-                    }
-                }
-            }
         }
     }
 }

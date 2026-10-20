@@ -9,7 +9,7 @@ RamLume/
 ├── App/            Entry point, AppDelegate (composition root), AppModel, main menu, --dump-metrics
 ├── Models/         Value types: statistics, partition, activity, pressure, history points, insights
 ├── Core/           System readers, process grouping, sampling scheduler, MonitoringCoordinator
-├── Diagnostics/    Trend analysis, health rules, insights, leak heuristic, notification policy
+├── Diagnostics/    Trend analysis, health rules, insights, recommendations, leak heuristic, notification policy
 ├── Storage/        Ring buffer, multi-resolution history, persistence, settings
 ├── Services/       Notifications, launch at login, sleep/wake and power observers
 ├── Debug/          Example data for screenshots (compiled into Debug builds only)

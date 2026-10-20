@@ -41,7 +41,7 @@ struct GeneralSettingsView: View {
                     }
                 }
                 Toggle("Tint the icon when memory needs attention", isOn: $settings.tintsMenuBarIcon)
-                Text("The icon turns orange or red only when RamLume's health assessment is Under pressure or Critical — never because of the usage percentage alone.")
+                Text("The icon turns orange or red only when RamLume's health assessment is High Pressure — never because of the usage percentage alone.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

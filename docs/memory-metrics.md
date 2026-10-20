@@ -52,7 +52,7 @@ therefore uses the documented dispatch source for every transition and the sysct
 the level when no transition has been seen, treating it as optional:
 
 - Values are size-checked and must be 1, 2, or 4; anything else counts as unavailable.
-- The "About the Numbers" page shows where the current level came from: the kernel level, or
+- Advanced Details › Definitions shows where the current level came from: the kernel level, or
   dispatch events only.
 - **Without the sysctl**, RamLume runs on dispatch events alone:
   - After launch, the level is *Not reported* until macOS reports a change. Health is then

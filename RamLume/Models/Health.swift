@@ -12,13 +12,25 @@ enum HealthState: String, Sendable, Codable, CaseIterable {
     case critical
     case insufficientData
 
+    /// One of four simple labels. Critical and sustained pressure share "High Pressure"; the
+    /// color and the explanation tell them apart.
     var title: String {
         switch self {
         case .healthy: "Healthy"
         case .elevated: "Elevated"
-        case .underPressure: "Under pressure"
-        case .critical: "Critical"
-        case .insufficientData: "Insufficient data"
+        case .underPressure, .critical: "High Pressure"
+        case .insufficientData: "Checking"
+        }
+    }
+
+    /// The status as a sentence anyone can understand.
+    var sentence: String {
+        switch self {
+        case .healthy: "Your Mac is running smoothly."
+        case .elevated: "Your Mac is working a little harder than usual."
+        case .underPressure: "Your Mac is running low on memory."
+        case .critical: "Your Mac is very low on memory."
+        case .insufficientData: "Checking your Mac's memory…"
         }
     }
 
@@ -81,6 +93,24 @@ struct HealthAssessment: Sendable, Equatable {
     /// One or two plain-English sentences.
     var explanation: String
     var evidence: [EvidenceItem]
+
+    /// One short line under the status sentence, such as "Memory pressure is low. No action needed."
+    var plainDetail: String {
+        switch state {
+        case .healthy:
+            "Memory pressure is low. No action needed."
+        case .elevated:
+            headline == "Recovering from pressure"
+                ? "Memory pressure was high a few minutes ago and is back to normal."
+                : "Your Mac recently moved some data from RAM to storage. If it feels slow, quit apps you aren't using."
+        case .underPressure:
+            "macOS reports high memory pressure. Quitting apps you aren't using will help."
+        case .critical:
+            "macOS reports critical memory pressure. Save your work and quit apps you don't need."
+        case .insufficientData:
+            headline == "Statistics unavailable" ? explanation : "RamLume is taking its first measurements."
+        }
+    }
 
     static let initial = HealthAssessment(
         state: .insufficientData,

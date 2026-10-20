@@ -79,7 +79,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             statusItemController?.closePanel()
         }
         model.notifications.onOpen = { [weak dashboardController] in
-            dashboardController?.show(section: .insights)
+            dashboardController?.show(section: .recommendations)
         }
 
         configureMonitoring(model)
@@ -288,7 +288,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return true
         }
         if let raw = value(after: "--dashboard") {
-            model.openDashboard(DashboardSection(rawValue: raw) ?? .overview)
+            model.openDashboard(DashboardSection(rawValue: raw) ?? .home)
             // `--auto-close <seconds>`: close the dashboard again, to check that its memory is released.
             if let delay = value(after: "--auto-close").flatMap({ Double($0) }) {
                 Task { [weak dashboardController = self.dashboardController] in
@@ -462,7 +462,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func showMetricsGuide(_ sender: Any?) {
-        model?.openDashboard(.metrics)
+        model?.showAdvanced(.definitions)
     }
 
     @objc func openRepository(_ sender: Any?) {
