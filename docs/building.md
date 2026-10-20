@@ -107,6 +107,16 @@ copy with `spctl --assess --type execute -vv /Applications/RamLume.app`: a notar
 
 prints one reading with every raw kernel value and each formula, then exits.
 
+## Console messages you can ignore
+
+When RamLume runs from Xcode, macOS logs messages such as `Error registering app with intents
+framework`, `Unable to get synchronousRemoteObjectProxy`, and `Unable to re-register with Process
+Instance Registry`, all with `NSCocoaErrorDomain Code=4097` and `com.apple.linkd.autoShortcut`.
+They come from macOS registering every app with its App Intents service and being refused; a
+minimal AppKit app with no App Intents logs exactly the same lines. RamLume doesn't use App Intents
+(the build already skips App Intents metadata), and the messages don't affect it. There's no
+supported setting to turn the registration off, so RamLume leaves it alone.
+
 ## Debug-only launch arguments
 
 Debug builds accept a few arguments for screenshots, testing, and performance measurements.

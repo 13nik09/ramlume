@@ -13,6 +13,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     private let statusItem: NSStatusItem?
     private let popover = NSPopover()
     private var outsideClickMonitor: Any?
+    private var appearanceObservations: [NSKeyValueObservation] = []
     private var lastPresentation: StatusItemPresentation?
 
     init(model: AppModel) {
@@ -37,7 +38,31 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         popover.behavior = .transient
         popover.animates = true
         popover.delegate = self
+        appearanceObservations = [
+            NSApp.observe(\.effectiveAppearance) { [weak self] _, _ in
+                MainActor.assumeIsolated { self?.matchSystemAppearance() }
+            },
+            NSApp.observe(\.appearance) { [weak self] _, _ in
+                MainActor.assumeIsolated { self?.matchSystemAppearance() }
+            },
+        ]
+        matchSystemAppearance()
         update()
+    }
+
+    /// macOS picks light or dark menu bar content for each item from what it sees behind it, and
+    /// it has left RamLume's item in the light style (black) on a dark menu bar while the items
+    /// around it were white. While the Mac uses Dark mode, the item uses the dark menu bar style;
+    /// otherwise macOS decides. (With RamLume's own Light or Dark setting the system's mode isn't
+    /// known here, so macOS decides then too.)
+    private func matchSystemAppearance() {
+        guard let button = statusItem?.button else { return }
+        let systemIsDark = NSApp.appearance == nil
+            && NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+        let wanted = systemIsDark ? NSAppearance(named: .vibrantDark) : nil
+        if button.appearance?.name != wanted?.name {
+            button.appearance = wanted
+        }
     }
 
     private static func makeSymbolImage() -> NSImage {
@@ -64,9 +89,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         guard presentation != lastPresentation, let button = statusItem?.button else { return }
         lastPresentation = presentation
 
-        // A plain title, not an attributed one: AppKit then draws it in the menu bar's own text
-        // color, light or dark, like the icon. (An attributed title without a color is drawn
-        // black, which is nearly invisible on a dark menu bar.)
+        // A plain title, drawn in the menu bar's text color like the icon (see `matchSystemAppearance`).
         button.font = NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
         if presentation.title.isEmpty {
             button.title = ""

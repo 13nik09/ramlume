@@ -45,6 +45,9 @@ First public version. Release notes: [docs/release-notes/v0.1.0.md](docs/release
   memory terms have short explanations behind info buttons and on the Definitions page.
 - A shorter welcome card explains what RamLume watches and why high RAM use can be normal.
 - WebKit's shared processes are listed as "Web pages (WebKit)" rather than by executable name.
+- The menu bar item could be drawn black on a dark menu bar, while the items around it were
+  white: macOS picks light or dark content for each item and sometimes left RamLume's in the
+  light style. While the Mac uses Dark mode, the item now always uses the dark menu bar style.
 
 ### Added (before the first release)
 
