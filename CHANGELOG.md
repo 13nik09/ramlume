@@ -39,8 +39,9 @@ First public version. Release notes: [docs/release-notes/v0.1.0.md](docs/release
 - Simpler navigation: Home, Applications, Recommendations, and Advanced Details. Home answers
   "Is my Mac healthy?", "Which apps use my RAM?", and "What should I do?"; the technical pages
   (memory breakdown, history, events, definitions) live under Advanced Details.
-- The menu bar panel shows the status in one sentence, memory in use with one bar, the three
-  largest apps, and one recommendation, instead of a grid of statistics and a chart.
+- The menu bar panel shows the status in one sentence, memory in use with one bar, app memory,
+  compressed memory, cached files, swap, the three largest apps, and one recommendation, instead
+  of a long grid of statistics and a chart.
 - Health labels are Healthy, Elevated, High Pressure, and Checking, with plain-English sentences;
   memory terms have short explanations behind info buttons and on the Definitions page.
 - A shorter welcome card explains what RamLume watches and why high RAM use can be normal.
@@ -54,8 +55,16 @@ First public version. Release notes: [docs/release-notes/v0.1.0.md](docs/release
 - Recommendations: offline, rule-based tips with the reason, a suggested action, step-by-step
   instructions (such as turning on Memory Saver in Brave or Chrome), and buttons that open
   Applications, Activity Monitor, or Login Items settings.
+- Memory details on Home: the figures Activity Monitor shows (physical memory, memory in use,
+  app, wired, and compressed memory, cached files, swap used) and the pressure level macOS
+  reports, with a button to the full breakdown in Advanced Details.
 
 ### Fixed (before the first release)
+
+- A gap that began before a chart's time range (for example the hours before RamLume was opened,
+  shown on the five-minute chart) drew its gray band past the chart's left edge, over the axis
+  labels, the card, and the sidebar. Gaps are now cut to the visible range, and chart marks stay
+  inside the plot. A gap's caption appears only when it fits on one line.
 
 - Resting the pointer on a history chart could make RamLume spin at 100% of a CPU core and stop
   redrawing. A tooltip placed left of the crosshair widened the chart overlay's layout and moved

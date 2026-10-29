@@ -9,8 +9,10 @@ struct HomeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 if let snapshot = monitor.snapshot {
-                    HomeHealthCard(summary: HealthSummary(assessment: monitor.health, figures: MemoryFigures(snapshot), pressure: monitor.pressure.level))
+                    let figures = MemoryFigures(snapshot)
+                    HomeHealthCard(summary: HealthSummary(assessment: monitor.health, figures: figures, pressure: monitor.pressure.level))
                         .equatable()
+                    HomeDetailsCard(figures: figures, pressure: monitor.pressure.level)
                     HomeUsageCard()
                     AdaptiveRow(threshold: 760) {
                         HomeTopAppsCard()
@@ -43,6 +45,30 @@ private struct HomeHealthCard: View, Equatable {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .card(.window, padding: 20)
+    }
+}
+
+/// Activity Monitor's memory figures, for people who want the numbers behind the status.
+private struct HomeDetailsCard: View {
+    @Environment(AppModel.self) private var app
+    var figures: MemoryFigures
+    var pressure: MemoryPressureLevel?
+
+    var body: some View {
+        DashboardCard("Memory details", accessory: {
+            Button("More Details") {
+                app.advancedPage = .memory
+                app.dashboardSection = .advanced
+            }
+            .controlSize(.small)
+        }) {
+            MemoryDetailsGrid(
+                figures: figures,
+                pressure: pressure,
+                items: [.physical, .inUse, .swap, .pressure, .app, .wired, .compressed, .cached]
+            )
+            .equatable()
+        }
     }
 }
 

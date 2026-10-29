@@ -14,7 +14,7 @@ macOS kernel, never guesses, and runs entirely on your Mac.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/home-dark.png">
-  <img alt="RamLume's Home page: the health status in one sentence, memory in use over 24 hours with a night's sleep shown as a gap, the largest apps, and the current recommendation" src="docs/images/home-light.png">
+  <img alt="RamLume's Home page: the health status in one sentence, the memory figures Activity Monitor shows, and memory in use over 24 hours with a night's sleep shown as a gap" src="docs/images/home-light.png">
 </picture>
 
 <sub>Screenshots show example data.</sub>
@@ -31,9 +31,12 @@ attention. It never sells you a "RAM cleaner".
 - **Menu bar monitoring**: a memory-chip icon with an optional percentage or used/total, tinted
   only when memory genuinely needs attention (never because of a percentage).
 - **A simple panel**: your Mac's status in one sentence ("Your Mac is running smoothly."), memory
-  in use with a single bar, the three apps using the most memory, and one recommendation.
+  in use with a single bar, app memory, compressed memory, cached files, and swap, the three apps
+  using the most memory, and one recommendation.
 - **Three questions, answered first**: the dashboard opens on Home (is my Mac healthy, which apps
-  use my RAM, what should I do?), with Applications and Recommendations one click away.
+  use my RAM, what should I do?), with Applications and Recommendations one click away. Home also
+  shows the figures Activity Monitor shows (physical memory, memory in use, app, wired, and
+  compressed memory, cached files, and swap used) and the pressure level macOS reports.
 - **Recommendations**: offline, rule-based tips with the reason, the suggested action, and
   step-by-step instructions, for example turning on Memory Saver in Brave or Chrome, reviewing
   login items, or quitting apps while memory pressure is high. When nothing needs doing, RamLume
@@ -62,7 +65,7 @@ attention. It never sells you a "RAM cleaner".
 
 | Menu bar panel | History |
 |---|---|
-| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/panel-dark.png"><img alt="The menu bar panel: the status in one sentence, memory in use, the three largest apps, and one recommendation" src="docs/images/panel-light.png" width="300"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/history-dark.png"><img alt="Advanced Details, History: stacked memory usage, memory pressure, compressed memory, and swap over 24 hours, with a night's sleep shown as a gap" src="docs/images/history-light.png"></picture> |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/panel-dark.png"><img alt="The menu bar panel: the status in one sentence, memory in use, app memory, compressed memory, cached files, swap, the three largest apps, and one recommendation" src="docs/images/panel-light.png" width="300"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/history-dark.png"><img alt="Advanced Details, History: stacked memory usage, memory pressure, compressed memory, and swap over 24 hours, with a night's sleep shown as a gap" src="docs/images/history-light.png"></picture> |
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/recommendations-dark.png">

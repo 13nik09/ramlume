@@ -79,12 +79,22 @@ private struct PanelContent: View {
                 PausedNote()
             }
             if let snapshot = monitor.snapshot {
+                let figures = MemoryFigures(snapshot)
                 HealthSummaryView(
-                    summary: HealthSummary(assessment: monitor.health, figures: MemoryFigures(snapshot), pressure: monitor.pressure.level),
+                    summary: HealthSummary(assessment: monitor.health, figures: figures, pressure: monitor.pressure.level),
                     compact: true
                 )
                 .equatable()
                 .card(.panel)
+                MemoryDetailsGrid(
+                    figures: figures,
+                    pressure: monitor.pressure.level,
+                    items: [.app, .compressed, .cached, .swap],
+                    allowsFourColumns: false,
+                    showsCaptions: false,
+                    spacing: 8
+                )
+                .equatable()
                 TopAppsSection()
                 RecommendationSection()
             } else {

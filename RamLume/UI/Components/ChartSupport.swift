@@ -29,9 +29,35 @@ extension HistorySeries {
     /// to look longer than it is.
     var domain: ClosedRange<Date> { start...max(end, start.addingTimeInterval(1)) }
 
+    /// Gaps cut to the visible span. A gap that began before the range (say, the hours RamLume
+    /// wasn't running before today's launch) would otherwise be drawn far outside the plot.
+    var visibleGaps: [HistoryGap] {
+        let domain = domain
+        return gaps.compactMap { gap in
+            let start = max(gap.start, domain.lowerBound)
+            let end = min(gap.end, domain.upperBound)
+            guard start < end else { return nil }
+            return HistoryGap(start: start, end: end, reason: gap.reason)
+        }
+    }
+
     func peak(_ value: (HistoryPoint) -> Double?) -> Double {
         points.compactMap { value($0.point) }.max() ?? 0
     }
+}
+
+extension View {
+    /// Keeps a chart's marks within the plot's left and right edges. Swift Charts doesn't clip
+    /// marks to the x-domain, so anything that starts before the visible range would draw over
+    /// the axis labels and past the card. Marks keep a few points above and below, so a line at
+    /// the top of the scale isn't shaved.
+    func clipsMarksToPlot() -> some View {
+        chartPlotStyle { plot in plot.clipShape(PlotWidthClip()) }
+    }
+}
+
+private struct PlotWidthClip: Shape {
+    func path(in rect: CGRect) -> Path { Path(rect.insetBy(dx: 0, dy: -4)) }
 }
 
 enum ChartFormatting {

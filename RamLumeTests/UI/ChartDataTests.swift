@@ -84,6 +84,31 @@ struct ChartDataTests {
         #expect(KeyFigures(figures: figures, pressure: firstReading, trends: .empty, now: now.addingTimeInterval(400)).pressureCaption == "for at least 6 min")
     }
 
+    // MARK: Gaps
+
+    @Test func gapBandsAreCutToTheVisibleRange() {
+        var visible = series([])
+        let rangeStart = visible.start
+        visible.gaps = [
+            // RamLume wasn't running overnight, until two minutes into the range.
+            HistoryGap(start: rangeStart.addingTimeInterval(-36_000), end: rangeStart.addingTimeInterval(120), reason: .appNotRunning),
+            HistoryGap(start: start.addingTimeInterval(100), end: start.addingTimeInterval(160), reason: .monitoringPaused),
+            HistoryGap(start: start.addingTimeInterval(500), end: start.addingTimeInterval(900), reason: .systemSleep),
+            // Ends exactly where the range begins: nothing to draw.
+            HistoryGap(start: rangeStart.addingTimeInterval(-600), end: rangeStart, reason: .systemSleep),
+        ]
+        let gaps = visible.visibleGaps
+        #expect(gaps.count == 3)
+        #expect(gaps[0].start == rangeStart)
+        #expect(gaps[0].duration == 120)   // captions go by what's on screen
+        #expect(gaps[0].reason == .appNotRunning)
+        #expect(gaps[1] == visible.gaps[1])
+        #expect(gaps[2].end == visible.domain.upperBound)
+        #expect(gaps.allSatisfy { visible.domain.contains($0.start) && visible.domain.contains($0.end) })
+        // Hover still reports the whole gap.
+        #expect(visible.gap(containing: rangeStart.addingTimeInterval(60)) == visible.gaps[0])
+    }
+
     // MARK: Pressure timeline
 
     @Test func pressureColumnsShowTheShareOfSamplesAtEachLevel() throws {

@@ -41,6 +41,7 @@ private func byteAxis(maximum: Double) -> some AxisContent {
 }
 
 private struct GapBands: ChartContent {
+    /// The gaps cut to the visible range (`series.visibleGaps`), so no band starts off the plot.
     var gaps: [HistoryGap]
     /// Gaps at least this long are captioned with why there's no data ("Mac was asleep"), so a
     /// wide empty band doesn't look like a chart that failed to draw.
@@ -52,12 +53,17 @@ private struct GapBands: ChartContent {
                 .foregroundStyle(gapFill)
                 .annotation(position: .overlay, alignment: .center) {
                     if gap.duration >= captionMinimum {
-                        Text(gap.reason.displayName)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(.background, in: Capsule())
+                        // An overlay is offered only the band's width; a caption that doesn't
+                        // fit on one line is left out rather than wrapped into a narrow column.
+                        ViewThatFits(in: .horizontal) {
+                            Text(gap.reason.displayName)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(.background, in: Capsule())
+                            Color.clear.frame(width: 0, height: 0)
+                        }
                     }
                 }
         }
@@ -84,7 +90,7 @@ struct MemoryUsageChart: View {
         Chart {
             // At panel size the broken line already shows missing data; bands would only add noise.
             if style != .compact {
-                GapBands(gaps: series.gaps, captionMinimum: series.range.duration / 8)
+                GapBands(gaps: series.visibleGaps, captionMinimum: series.range.duration / 8)
             }
             switch style {
             case .compact, .simple: compactMarks
@@ -92,6 +98,7 @@ struct MemoryUsageChart: View {
             }
         }
         .chartXScale(domain: series.domain)
+        .clipsMarksToPlot()
         .chartYScale(domain: 0...max(total, 1))
         .chartLegend(.hidden)
         .chartXAxis {
@@ -206,7 +213,7 @@ struct CompressionChart: View {
     var body: some View {
         let maximum = max(series.peak { $0.compressedOriginal }, series.peak { $0.compressed }, Double(MemoryUnits.gibibyte) / 4)
         Chart {
-            GapBands(gaps: series.gaps)
+            GapBands(gaps: series.visibleGaps)
             ForEach(series.points) { item in
                 AreaMark(x: .value("Time", item.date), yStart: .value("Bytes", 0), yEnd: .value("Occupied", item.point.compressed), series: .value("Layer", "occupied-\(item.segment)"))
                     .foregroundStyle(Palette.compressed.opacity(washOpacity))
@@ -222,6 +229,7 @@ struct CompressionChart: View {
             }
         }
         .chartXScale(domain: series.domain)
+        .clipsMarksToPlot()
         .chartYScale(domain: 0...maximum)
         .chartXAxis { timeAxis(series.range) }
         .chartYAxis { byteAxis(maximum: maximum) }
@@ -261,7 +269,7 @@ struct SwapChart: View {
         let swapPoints = series.points.filter { $0.point.swapUsed != nil }
         let maximum = Self.yMaximum(for: series)
         Chart {
-            GapBands(gaps: series.gaps)
+            GapBands(gaps: series.visibleGaps)
             ForEach(swapPoints) { item in
                 let used = item.point.swapUsed ?? 0
                 AreaMark(x: .value("Time", item.date), yStart: .value("Bytes", 0), yEnd: .value("Swap used", used), series: .value("Layer", "swap-\(item.segment)"))
@@ -280,6 +288,7 @@ struct SwapChart: View {
             }
         }
         .chartXScale(domain: series.domain)
+        .clipsMarksToPlot()
         .chartYScale(domain: 0...maximum)
         .chartXAxis { timeAxis(series.range) }
         .chartYAxis { byteAxis(maximum: maximum) }
@@ -360,6 +369,7 @@ struct PressureTimeline: View {
             }
         }
         .chartXScale(domain: series.domain)
+        .clipsMarksToPlot()
         .chartYScale(domain: 0.0...1.0)
         .chartYAxis(.hidden)
         .chartXAxis(.hidden)
@@ -474,6 +484,7 @@ struct SwapActivityChart: View {
             }
         }
         .chartXScale(domain: series.domain)
+        .clipsMarksToPlot()
         .chartYScale(domain: 0...maximum)
         .chartXAxis { timeAxis(series.range) }
         .chartYAxis {
