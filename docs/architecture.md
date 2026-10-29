@@ -133,8 +133,8 @@ file is set aside (`History.unreadable.json`) and RamLume starts fresh.
 
 ## Chart hover
 
-Every history chart, and the panel's small chart, shares `ChartCrosshair`, an overlay that draws
-the crosshair, marker, and tooltip. Two rules keep hover cheap and loop-free:
+Every history chart shares `ChartCrosshair`, an overlay that draws the crosshair, marker, and
+tooltip. Two rules keep hover cheap and loop-free:
 
 - **The hover area never moves.** The view that receives hover is the overlay's base view; the
   crosshair, marker, and tooltip are separate `.overlay`s on it, which can't change its frame,

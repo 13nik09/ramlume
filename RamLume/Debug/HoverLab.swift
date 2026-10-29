@@ -40,7 +40,7 @@ enum HoverDiagnostics {
 @MainActor
 final class HoverLab {
     enum ChartKind: String, CaseIterable {
-        case usage, compactUsage, compression, swap, swapActivity, pressure
+        case usage, homeUsage, compression, swap, swapActivity, pressure
     }
 
     @Observable
@@ -57,7 +57,7 @@ final class HoverLab {
             Group {
                 switch model.chart {
                 case .usage: MemoryUsageChart(series: model.series, style: .full)
-                case .compactUsage: MemoryUsageChart(series: model.series, style: .compact)
+                case .homeUsage: MemoryUsageChart(series: model.series, style: .simple)
                 case .compression: CompressionChart(series: model.series)
                 case .swap: SwapChart(series: model.series)
                 case .swapActivity: SwapActivityChart(series: model.series)

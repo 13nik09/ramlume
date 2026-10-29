@@ -74,8 +74,6 @@ private struct GapBands: ChartContent {
 
 struct MemoryUsageChart: View {
     enum Style {
-        /// Single "used" series, no axes.
-        case compact
         /// Single "used" series with axes and gaps. For Home.
         case simple
         /// Stacked composition with axes. For the detailed history.
@@ -88,12 +86,9 @@ struct MemoryUsageChart: View {
     var body: some View {
         let total = Double(series.totalMemory ?? 0)
         Chart {
-            // At panel size the broken line already shows missing data; bands would only add noise.
-            if style != .compact {
-                GapBands(gaps: series.visibleGaps, captionMinimum: series.range.duration / 8)
-            }
+            GapBands(gaps: series.visibleGaps, captionMinimum: series.range.duration / 8)
             switch style {
-            case .compact, .simple: compactMarks
+            case .simple: usedMarks
             case .full: stackedMarks
             }
         }
@@ -101,12 +96,8 @@ struct MemoryUsageChart: View {
         .clipsMarksToPlot()
         .chartYScale(domain: 0...max(total, 1))
         .chartLegend(.hidden)
-        .chartXAxis {
-            if style != .compact { timeAxis(series.range) }
-        }
-        .chartYAxis {
-            if style != .compact { byteAxis(maximum: total) }
-        }
+        .chartXAxis { timeAxis(series.range) }
+        .chartYAxis { byteAxis(maximum: total) }
         .chartOverlay { proxy in
             ChartCrosshair(
                 proxy: proxy,
@@ -130,7 +121,7 @@ struct MemoryUsageChart: View {
     }
 
     @ChartContentBuilder
-    private var compactMarks: some ChartContent {
+    private var usedMarks: some ChartContent {
         ForEach(series.points) { item in
             AreaMark(
                 x: .value("Time", item.date),
