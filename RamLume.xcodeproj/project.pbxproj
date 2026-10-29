@@ -341,7 +341,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = RamLume;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 RamLume contributors. Released under the MIT License.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 RamLume contributors. Licensed under the GNU General Public License v3.0.";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -367,7 +367,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = RamLume;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_LSUIElement = YES;
-				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 RamLume contributors. Released under the MIT License.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "Copyright © 2026 RamLume contributors. Licensed under the GNU General Public License v3.0.";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

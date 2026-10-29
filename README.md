@@ -6,7 +6,7 @@ RamLume is a free, open-source menu bar app for macOS that shows how your Mac is
 memory and explains what the numbers mean in plain English. It reads statistics straight from the
 macOS kernel, never guesses, and runs entirely on your Mac.
 
-[![CI](https://github.com/13nik09/RamLume/actions/workflows/ci.yml/badge.svg)](https://github.com/13nik09/RamLume/actions/workflows/ci.yml)
+[![CI](https://github.com/13nik09/ramlume/actions/workflows/ci.yml/badge.svg)](https://github.com/13nik09/ramlume/actions/workflows/ci.yml)
 
 > **Status: 0.1.0, the first public version.** Release builds are universal (Apple silicon and
 > Intel) and **not notarized** unless a release says otherwise, so macOS asks you to confirm the
@@ -85,7 +85,7 @@ Recommendations, Advanced Details); they need retaking. -->
 ## Installation
 
 1. Download `RamLume-<version>-macOS.zip` from the
-   [Releases page](https://github.com/13nik09/RamLume/releases).
+   [Releases page](https://github.com/13nik09/ramlume/releases).
 2. Optionally, check the download against the SHA-256 checksum in the release notes:
    ```bash
    shasum -a 256 ~/Downloads/RamLume-0.1.0-macOS.zip
@@ -166,9 +166,11 @@ the numbers.
 
 Bug reports, measurements from different Macs, and pull requests are welcome. Please read
 [CONTRIBUTING.md](CONTRIBUTING.md) first; it explains the project's accuracy principles.
-To report a bug, use [GitHub Issues](https://github.com/13nik09/RamLume/issues) (also in
+To report a bug, use [GitHub Issues](https://github.com/13nik09/ramlume/issues) (also in
 RamLume's **Help** menu).
 
 ## License
 
-RamLume is released under the [MIT License](LICENSE).
+RamLume is free software, released under the [GNU General Public License v3.0](LICENSE). You can use,
+study, share, and change it; if you distribute a modified version, it must be under the same license,
+with its source code available.

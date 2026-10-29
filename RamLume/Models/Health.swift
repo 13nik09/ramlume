@@ -98,7 +98,8 @@ struct HealthAssessment: Sendable, Equatable {
     var plainDetail: String {
         switch state {
         case .healthy:
-            "Memory pressure is low. No action needed."
+            // Without a pressure level from macOS, health rests on swap activity alone.
+            headline == "No signs of strain" ? "No signs of memory strain. No action needed." : "Memory pressure is low. No action needed."
         case .elevated:
             headline == "Recovering from pressure"
                 ? "Memory pressure was high a few minutes ago and is back to normal."

@@ -271,7 +271,9 @@ enum RecommendationEngine {
     static func status(_ input: DiagnosticsInput, _ thresholds: HealthThresholds) -> Recommendation {
         switch input.health.state {
         case .healthy:
-            var reason = "macOS reports normal memory pressure, and your Mac hasn't needed to rely on swap recently."
+            var reason = input.pressure.level == nil
+                ? "macOS hasn't reported a memory pressure level, but your Mac hasn't needed to rely on swap recently."
+                : "macOS reports normal memory pressure, and your Mac hasn't needed to rely on swap recently."
             if let fraction = input.snapshot?.breakdown.usedFraction, fraction >= thresholds.highUtilizationFraction {
                 reason += " That's true even with \(MemoryFormatter.percent(fraction)) of RAM in use."
             }

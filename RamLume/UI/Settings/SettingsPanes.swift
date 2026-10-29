@@ -267,7 +267,7 @@ struct AboutSettingsView: View {
             Text(AppInfo.tagline)
                 .font(.title3)
             VStack(spacing: 6) {
-                Text("Free and open source under the MIT License.")
+                Text("Free and open source under the GNU General Public License v3.0.")
                 Text("RamLume runs entirely on your Mac. It makes no network requests and has no analytics, accounts, or cloud services.")
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)

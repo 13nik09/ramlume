@@ -163,7 +163,7 @@ enum AppInfo {
 
     /// The public repository. Forks can point this at their own repository, or set it to `nil`
     /// to hide the link.
-    static let repositoryURL: URL? = URL(string: "https://github.com/13nik09/RamLume")
+    static let repositoryURL: URL? = URL(string: "https://github.com/13nik09/ramlume")
 
     static var issuesURL: URL? {
         repositoryURL?.appendingPathComponent("issues/new/choose")
@@ -184,7 +184,7 @@ enum AppInfo {
     @MainActor
     static var aboutPanelOptions: [NSApplication.AboutPanelOptionKey: Any] {
         let credits = NSMutableAttributedString(
-            string: "\(tagline)\n\nFree and open source under the MIT License.\nEverything stays on your Mac: no network access, analytics, or accounts.",
+            string: "\(tagline)\n\nFree and open source under the GNU General Public License v3.0.\nEverything stays on your Mac: no network access, analytics, or accounts.",
             attributes: [
                 .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
                 .foregroundColor: NSColor.secondaryLabelColor,

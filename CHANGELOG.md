@@ -88,4 +88,4 @@ First public version. Release notes: [docs/release-notes/v0.1.0.md](docs/release
   doesn't document; see [docs/memory-metrics.md](docs/memory-metrics.md) for why and for the
   fallback.
 
-[0.1.0]: https://github.com/13nik09/RamLume/releases/tag/v0.1.0
+[0.1.0]: https://github.com/13nik09/ramlume/releases/tag/v0.1.0

@@ -97,6 +97,16 @@ struct RecommendationEngineTests {
         #expect(!allText([growth]).contains { $0.localizedCaseInsensitiveContains("leak") })
     }
 
+    @Test func healthWithoutAPressureLevelDoesNotClaimOne() throws {
+        let health = HealthRules.assess(snapshot: Fixtures.snapshot(), readError: nil, pressure: .unknown, trends: Scenario.trends(), now: now)
+        #expect(health.state == .healthy)
+        #expect(health.plainDetail == "No signs of memory strain. No action needed.")
+        let first = try #require(recommendations(pressure: .unknown).first)
+        #expect(first.id == "healthy")
+        #expect(first.reason.hasPrefix("macOS hasn't reported a memory pressure level"))
+        #expect(!first.reason.contains("reports normal memory pressure"))
+    }
+
     @Test func checkingWhileThereIsNoData() {
         let result = recommendations(snapshot: nil, pressure: .unknown)
         #expect(result.map(\.id) == ["checking"])

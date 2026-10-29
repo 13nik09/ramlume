@@ -22,7 +22,7 @@ RamLume's value comes from being trustworthy. Every change should keep these tru
 ## Getting started
 
 ```bash
-git clone https://github.com/13nik09/RamLume.git
+git clone https://github.com/13nik09/ramlume.git
 cd RamLume
 open RamLume.xcodeproj
 ```
@@ -90,4 +90,5 @@ the same moment. The report contains memory statistics only — no app names.
   unwraps, constants named and documented).
 - UI changes: include before/after screenshots in light and dark mode, and check VoiceOver labels.
 
-By contributing you agree that your contributions are licensed under the MIT License.
+By contributing you agree that your contributions are licensed under the GNU General Public
+License v3.0, the same license as RamLume (see [LICENSE](LICENSE)).

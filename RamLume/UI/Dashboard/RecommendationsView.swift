@@ -10,7 +10,9 @@ struct RecommendationsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(actionable == 0 ? "Everything looks good" : "\(actionable) suggestion\(actionable == 1 ? "" : "s") for your Mac")
+                    Text(recommendations.first?.id == "checking" ? "Checking your Mac's memory"
+                        : actionable == 0 ? "Everything looks good"
+                        : "\(actionable) suggestion\(actionable == 1 ? "" : "s") for your Mac")
                         .font(.title2.weight(.semibold))
                     Text("Based on what RamLume measures on your Mac right now. RamLume never changes settings or quits apps for you.")
                         .foregroundStyle(.secondary)
