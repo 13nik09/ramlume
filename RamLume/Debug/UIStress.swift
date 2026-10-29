@@ -388,19 +388,28 @@ final class ScriptedProcessProvider: ProcessProviding, @unchecked Sendable {
 
     /// An app with one process, an app with a helper, two processes sharing an executable, and
     /// standalone processes (enough to scroll).
-    private static let base: [ProcessRecord] = [
-        record(100, "Alpha", "/Applications/Alpha.app/Contents/MacOS/Alpha", 900),
-        record(200, "Beta", "/Applications/Beta.app/Contents/MacOS/Beta", 700),
-        record(201, "Beta Helper", "/Applications/Beta.app/Contents/Frameworks/Beta Helper.app/Contents/MacOS/Beta Helper", 300),
-        record(300, "worker", "/usr/libexec/worker", 120),
-        record(301, "worker", "/usr/libexec/worker", 110),
-    ] + (0..<40).map { index in
-        record(Int32(1_000 + index), "tool\(index)", "/usr/local/bin/tool\(index)", Double(50 + index))
-    }
+    private static let base: [ProcessRecord] = {
+        var records: [ProcessRecord] = [
+            record(100, "Alpha", "/Applications/Alpha.app/Contents/MacOS/Alpha", 900),
+            record(200, "Beta", "/Applications/Beta.app/Contents/MacOS/Beta", 700),
+            record(201, "Beta Helper", "/Applications/Beta.app/Contents/Frameworks/Beta Helper.app/Contents/MacOS/Beta Helper", 300),
+            record(300, "worker", "/usr/libexec/worker", 120),
+            record(301, "worker", "/usr/libexec/worker", 110),
+        ]
+        for index in 0..<40 {
+            let megabytes = Double(50 + index)
+            records.append(record(Int32(1_000 + index), "tool\(index)", "/usr/local/bin/tool\(index)", megabytes))
+        }
+        return records
+    }()
 
     static let steps: [(name: String, records: [ProcessRecord])] = {
         var list: [(String, [ProcessRecord])] = [("base", base), ("unchanged", base)]
-        list.append(("re-sorted", base.map { record($0.pid, $0.name, $0.executablePath ?? "", 2_000 - Double($0.footprint ?? 0) / 1_048_576) }))
+        let resorted: [ProcessRecord] = base.map { (item: ProcessRecord) -> ProcessRecord in
+            let megabytes: Double = 2_000 - Double(item.footprint ?? 0) / 1_048_576
+            return record(item.pid, item.name, item.executablePath ?? "", megabytes)
+        }
+        list.append(("re-sorted", resorted))
         list.append(("base again", base))
         list.append(("app gains a helper", base + [record(101, "Alpha Helper", "/Applications/Alpha.app/Contents/MacOS/Alpha Helper", 80)]))
         list.append(("app loses its helper", base))
@@ -419,14 +428,20 @@ final class ScriptedProcessProvider: ProcessProviding, @unchecked Sendable {
         list.append(("base at the end", base))
         // A list as long as a real one, whose footprints shift by up to 3% on every scan, as real
         // ones do (deterministically, so every run sees the same lists).
-        let large = (0..<600).map { index in
-            record(Int32(5_000 + index), "service\(index)", "/usr/libexec/service\(index)", Double(20 + index % 300))
+        // Explicit types and small steps: Xcode 26's type checker gives up on these closures otherwise.
+        let large: [ProcessRecord] = (0..<600).map { (index: Int) -> ProcessRecord in
+            let megabytes = Double(20 + index % 300)
+            return record(Int32(5_000 + index), "service\(index)", "/usr/libexec/service\(index)", megabytes)
         }
         for scan in 1...8 {
-            list.append(("600 processes, footprints shift (\(scan))", large.enumerated().map { index, item in
-                let shift = 1 + Double((index * 7_919 + scan * 104_729) % 61 - 30) / 1_000
-                return record(item.pid, item.name, item.executablePath ?? "", Double(item.footprint ?? 0) / 1_048_576 * shift)
-            }))
+            var shifted: [ProcessRecord] = []
+            for (index, item) in large.enumerated() {
+                let step: Int = (index * 7_919 + scan * 104_729) % 61 - 30
+                let shift: Double = 1 + Double(step) / 1_000
+                let megabytes: Double = Double(item.footprint ?? 0) / 1_048_576 * shift
+                shifted.append(record(item.pid, item.name, item.executablePath ?? "", megabytes))
+            }
+            list.append(("600 processes, footprints shift (\(scan))", shifted))
         }
         return list
     }()

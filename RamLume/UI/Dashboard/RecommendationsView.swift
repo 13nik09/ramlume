@@ -6,13 +6,10 @@ struct RecommendationsView: View {
 
     var body: some View {
         let recommendations = app.monitor.recommendations
-        let actionable = recommendations.filter(\.priority.isActionable).count
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(recommendations.first?.id == "checking" ? "Checking your Mac's memory"
-                        : actionable == 0 ? "Everything looks good"
-                        : "\(actionable) suggestion\(actionable == 1 ? "" : "s") for your Mac")
+                    Text(Self.heading(for: recommendations))
                         .font(.title2.weight(.semibold))
                     Text("Based on what RamLume measures on your Mac right now. RamLume never changes settings or quits apps for you.")
                         .foregroundStyle(.secondary)
@@ -27,6 +24,16 @@ struct RecommendationsView: View {
             .padding(24)
             .frame(maxWidth: 860, alignment: .leading)
             .frame(maxWidth: .infinity)
+        }
+    }
+
+    static func heading(for recommendations: [Recommendation]) -> String {
+        if recommendations.first?.id == "checking" { return "Checking your Mac's memory" }
+        let actionable = recommendations.filter { $0.priority.isActionable }.count
+        switch actionable {
+        case 0: return "Everything looks good"
+        case 1: return "1 suggestion for your Mac"
+        default: return "\(actionable) suggestions for your Mac"
         }
     }
 }

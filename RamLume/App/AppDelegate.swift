@@ -40,12 +40,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if DebugOptions.isDemo {
             // Example data for screenshots: no history file is read or written.
             let anchor = Date()
+            let processReader: any ProcessProviding = CommandLine.arguments.contains("--processes-probe")
+                ? ScriptedProcessProvider.shared : DemoData.ProcessProvider()
             monitor = MonitoringCoordinator(
                 memoryReader: .success(DemoData.MemoryReader(anchor: anchor)),
                 swapReader: DemoData.SwapReader(anchor: anchor),
                 pressureReader: DemoData.PressureReader(anchor: anchor),
-                processReader: CommandLine.arguments.contains("--processes-probe")
-                    ? ScriptedProcessProvider.shared : DemoData.ProcessProvider(),
+                processReader: processReader,
                 history: DemoData.makeHistory(anchor: anchor, retention: settings.historyRetention)
             )
         } else {
