@@ -21,11 +21,12 @@ private func gapTooltip(_ gap: HistoryGap) -> ChartTooltip {
     )
 }
 
-/// Standard time axis for a range.
+/// Standard time axis for a range. Labels are centered under their grid lines (by default Swift
+/// Charts starts each date label at its line, which reads as if labels and lines don't match).
 private func timeAxis(_ range: ChartRange) -> some AxisContent {
     AxisMarks(values: .automatic(desiredCount: 5)) { _ in
         AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-        AxisValueLabel(format: ChartFormatting.timeFormat(for: range))
+        AxisValueLabel(format: ChartFormatting.timeFormat(for: range), anchor: .top)
     }
 }
 
@@ -41,11 +42,24 @@ private func byteAxis(maximum: Double) -> some AxisContent {
 
 private struct GapBands: ChartContent {
     var gaps: [HistoryGap]
+    /// Gaps at least this long are captioned with why there's no data ("Mac was asleep"), so a
+    /// wide empty band doesn't look like a chart that failed to draw.
+    var captionMinimum: TimeInterval = .infinity
 
     var body: some ChartContent {
         ForEach(Array(gaps.enumerated()), id: \.offset) { _, gap in
             RectangleMark(xStart: .value("Gap start", gap.start), xEnd: .value("Gap end", gap.end))
                 .foregroundStyle(gapFill)
+                .annotation(position: .overlay, alignment: .center) {
+                    if gap.duration >= captionMinimum {
+                        Text(gap.reason.displayName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(.background, in: Capsule())
+                    }
+                }
         }
     }
 }
@@ -70,7 +84,7 @@ struct MemoryUsageChart: View {
         Chart {
             // At panel size the broken line already shows missing data; bands would only add noise.
             if style != .compact {
-                GapBands(gaps: series.gaps)
+                GapBands(gaps: series.gaps, captionMinimum: series.range.duration / 8)
             }
             switch style {
             case .compact, .simple: compactMarks
