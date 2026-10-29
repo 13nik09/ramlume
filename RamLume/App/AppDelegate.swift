@@ -288,6 +288,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return true
         }
         if let raw = value(after: "--dashboard") {
+            // `--advanced-page <page>`: which Advanced Details page to show (for screenshots).
+            if let page = value(after: "--advanced-page").flatMap(AdvancedPage.init(rawValue:)) {
+                model.advancedPage = page
+            }
             model.openDashboard(DashboardSection(rawValue: raw) ?? .home)
             // `--auto-close <seconds>`: close the dashboard again, to check that its memory is released.
             if let delay = value(after: "--auto-close").flatMap({ Double($0) }) {

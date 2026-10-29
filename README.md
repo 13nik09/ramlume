@@ -13,8 +13,8 @@ macOS kernel, never guesses, and runs entirely on your Mac.
 > first launch. See [Installation](#installation).
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/overview-dark.png">
-  <img alt="The RamLume dashboard: memory in use, a health assessment, and a memory usage chart" src="docs/images/overview-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/home-dark.png">
+  <img alt="RamLume's Home page: the health status in one sentence, memory in use over 24 hours with a night's sleep shown as a gap, the largest apps, and the current recommendation" src="docs/images/home-light.png">
 </picture>
 
 <sub>Screenshots show example data.</sub>
@@ -60,21 +60,18 @@ attention. It never sells you a "RAM cleaner".
 
 ## Screenshots
 
-<!-- These show the dashboard before the simplified navigation (Home, Applications,
-Recommendations, Advanced Details); they need retaking. -->
-
 | Menu bar panel | History |
 |---|---|
-| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/panel-dark.png"><img alt="The menu bar panel" src="docs/images/panel-light.png" width="300"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/history-dark.png"><img alt="24 hours of history with a night's sleep shown as a gap and a short period of memory pressure" src="docs/images/history-light.png"></picture> |
+| <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/panel-dark.png"><img alt="The menu bar panel: the status in one sentence, memory in use, the three largest apps, and one recommendation" src="docs/images/panel-light.png" width="300"></picture> | <picture><source media="(prefers-color-scheme: dark)" srcset="docs/images/history-dark.png"><img alt="Advanced Details, History: stacked memory usage, memory pressure, compressed memory, and swap over 24 hours, with a night's sleep shown as a gap" src="docs/images/history-light.png"></picture> |
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/insights-dark.png">
-  <img alt="Insights: plain-English explanations with the evidence behind them" src="docs/images/insights-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/recommendations-dark.png">
+  <img alt="Recommendations: plain-English tips with the reason behind each one, here an optional tip to turn on Memory Saver in Brave" src="docs/images/recommendations-light.png">
 </picture>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/images/processes-dark.png">
-  <img alt="Processes grouped by app, with restricted system processes labelled honestly" src="docs/images/processes-light.png">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/applications-dark.png">
+  <img alt="Applications, each grouped with its helper processes, with search and sorting" src="docs/images/applications-light.png">
 </picture>
 
 ## Requirements

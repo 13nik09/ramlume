@@ -245,6 +245,12 @@ enum DemoData {
             DemoProcess(pid: 1_240, name: "SourceKitService", path: "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/sourcekitd.framework/Versions/A/XPCServices/SourceKitService.xpc/Contents/MacOS/SourceKitService", megabytes: 690),
             DemoProcess(pid: 1_251, name: "XCBBuildService", path: "/Applications/Xcode.app/Contents/SharedFrameworks/XCBuild.framework/Versions/A/PlugIns/XCBBuildService.bundle/Contents/MacOS/XCBBuildService", megabytes: 245),
             DemoProcess(pid: 641, name: "Safari", path: "/Applications/Safari.app/Contents/MacOS/Safari", megabytes: 385),
+            // A browser large enough for a (healthy-Mac, optional) browser tip in the screenshots.
+            DemoProcess(pid: 1_310, name: "Brave Browser", path: "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser", megabytes: 420),
+            DemoProcess(pid: 1_311, name: "Brave Browser Helper (Renderer)", path: "/Applications/Brave Browser.app/Contents/Frameworks/Brave Browser Framework.framework/Versions/Current/Helpers/Brave Browser Helper (Renderer).app/Contents/MacOS/Brave Browser Helper (Renderer)", megabytes: 650),
+            DemoProcess(pid: 1_312, name: "Brave Browser Helper (Renderer)", path: "/Applications/Brave Browser.app/Contents/Frameworks/Brave Browser Framework.framework/Versions/Current/Helpers/Brave Browser Helper (Renderer).app/Contents/MacOS/Brave Browser Helper (Renderer)", megabytes: 380),
+            DemoProcess(pid: 1_313, name: "Brave Browser Helper (Renderer)", path: "/Applications/Brave Browser.app/Contents/Frameworks/Brave Browser Framework.framework/Versions/Current/Helpers/Brave Browser Helper (Renderer).app/Contents/MacOS/Brave Browser Helper (Renderer)", megabytes: 240),
+            DemoProcess(pid: 1_314, name: "Brave Browser Helper (GPU)", path: "/Applications/Brave Browser.app/Contents/Frameworks/Brave Browser Framework.framework/Versions/Current/Helpers/Brave Browser Helper (GPU).app/Contents/MacOS/Brave Browser Helper (GPU)", megabytes: 310),
             DemoProcess(pid: 733, name: "Photos", path: "/System/Applications/Photos.app/Contents/MacOS/Photos", megabytes: 455),
             DemoProcess(pid: 702, name: "Mail", path: "/System/Applications/Mail.app/Contents/MacOS/Mail", megabytes: 372),
             DemoProcess(pid: 715, name: "Music", path: "/System/Applications/Music.app/Contents/MacOS/Music", megabytes: 268),
@@ -317,6 +323,7 @@ enum DemoData {
     private static let bundleMetadata: [String: BundleMetadata] = [
         "/Applications/Xcode.app": BundleMetadata(displayName: "Xcode", bundleIdentifier: "com.apple.dt.Xcode"),
         "/Applications/Safari.app": BundleMetadata(displayName: "Safari", bundleIdentifier: "com.apple.Safari"),
+        "/Applications/Brave Browser.app": BundleMetadata(displayName: "Brave Browser", bundleIdentifier: "com.brave.Browser"),
         "/Applications/RamLume.app": BundleMetadata(displayName: "RamLume", bundleIdentifier: nil),
         "/System/Applications/Photos.app": BundleMetadata(displayName: "Photos", bundleIdentifier: "com.apple.Photos"),
         "/System/Applications/Mail.app": BundleMetadata(displayName: "Mail", bundleIdentifier: "com.apple.mail"),
