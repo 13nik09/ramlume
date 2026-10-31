@@ -90,7 +90,6 @@ private struct PanelContent: View {
                     figures: figures,
                     pressure: monitor.pressure.level,
                     items: [.app, .compressed, .cached, .swap],
-                    allowsFourColumns: false,
                     showsCaptions: false,
                     spacing: 8
                 )

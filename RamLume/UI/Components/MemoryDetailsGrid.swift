@@ -17,30 +17,19 @@ struct MemoryDetailsGrid: View, Equatable {
     var figures: MemoryFigures
     var pressure: MemoryPressureLevel?
     var items: [Item]
-    /// Four across when every tile fits that way without truncating, otherwise two.
-    var allowsFourColumns = true
+    var columns = 2
     var showsCaptions = true
     var spacing: CGFloat = 12
     var context: CardContext = .panel
 
     var body: some View {
-        if allowsFourColumns {
-            ViewThatFits(in: .horizontal) {
-                grid(columns: 4)
-                grid(columns: 2)
-            }
-        } else {
-            grid(columns: 2)
-        }
-    }
-
-    private func grid(columns: Int) -> some View {
         let tiles: [StatTile] = items.map(tile)
-        let rowStarts: [Int] = Array(stride(from: 0, to: tiles.count, by: columns))
-        return Grid(horizontalSpacing: spacing, verticalSpacing: spacing) {
+        let perRow = max(columns, 1)
+        let rowStarts: [Int] = Array(stride(from: 0, to: tiles.count, by: perRow))
+        Grid(horizontalSpacing: spacing, verticalSpacing: spacing) {
             ForEach(rowStarts, id: \.self) { start in
                 GridRow {
-                    ForEach(start..<min(start + columns, tiles.count), id: \.self) { index in
+                    ForEach(start..<min(start + perRow, tiles.count), id: \.self) { index in
                         tiles[index]
                     }
                 }

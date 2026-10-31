@@ -10,6 +10,8 @@ All notable changes to RamLume are documented here. The format follows
 
 - Home shows the memory details below the largest apps and the recommendation, so the status,
   the chart, the apps, and the recommendation fit in the window without scrolling.
+- Home uses about a third less CPU while it's visible (3.6 % to about 2.3 % of one core in an
+  optimized build): its memory details no longer lay out their grid twice on every update.
 
 ### Fixed
 

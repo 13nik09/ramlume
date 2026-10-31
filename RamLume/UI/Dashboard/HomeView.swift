@@ -54,6 +54,9 @@ private struct HomeDetailsCard: View {
     @Environment(AppModel.self) private var app
     var figures: MemoryFigures
     var pressure: MemoryPressureLevel?
+    /// Four tiles across where they fit without truncating, otherwise two. Chosen from the width
+    /// rather than with `ViewThatFits`, which lays the grid out twice on every update.
+    @State private var columns = 4
 
     var body: some View {
         DashboardCard("Memory details", accessory: {
@@ -66,9 +69,11 @@ private struct HomeDetailsCard: View {
             MemoryDetailsGrid(
                 figures: figures,
                 pressure: pressure,
-                items: [.physical, .inUse, .swap, .pressure, .app, .wired, .compressed, .cached]
+                items: [.physical, .inUse, .swap, .pressure, .app, .wired, .compressed, .cached],
+                columns: columns
             )
             .equatable()
+            .onGeometryChange(for: Int.self) { $0.size.width >= 600 ? 4 : 2 } action: { columns = $0 }
         }
     }
 }
