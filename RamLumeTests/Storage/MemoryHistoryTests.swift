@@ -99,6 +99,33 @@ struct MemoryHistoryTests {
         #expect(history.points(in: .raw).count == 61)
     }
 
+    @Test func loadingHistorySavedWhileTheClockWasAheadDropsTheFuture() {
+        var history = MemoryHistory(retention: .oneDay)
+        for second in stride(from: 0, to: 1_800, by: 5) {
+            history.append(Fixtures.point(at: start.addingTimeInterval(Double(second))))
+        }
+        let archive = history.archive(savedAt: start.addingTimeInterval(1_800))
+        // Relaunched after the clock was set back to 10 minutes in: data now in the "future" goes.
+        let now = start.addingTimeInterval(600)
+        var restored = MemoryHistory(archive: archive, retention: .oneDay, now: now)
+        for tier in [HistoryTier.tenSeconds, .oneMinute, .fiveMinutes] {
+            #expect(restored.points(in: tier).allSatisfy { $0.end <= now })
+        }
+        #expect(restored.gaps.elements.allSatisfy { $0.end <= now })
+        // Recording continues in order.
+        restored.append(Fixtures.point(at: now.addingTimeInterval(5)))
+        restored.append(Fixtures.point(at: now.addingTimeInterval(65)))
+        let minutes = restored.points(in: .oneMinute)
+        #expect(zip(minutes, minutes.dropFirst()).allSatisfy { $0.start < $1.start })
+    }
+
+    @Test func aClockSetBackCountsAsTheIntervalHavingPassed() {
+        // So periodic saves and process scans don't stop until the clock catches up.
+        #expect(!start.hasElapsed(60, by: start.addingTimeInterval(30)))
+        #expect(start.hasElapsed(60, by: start.addingTimeInterval(60)))
+        #expect(start.hasElapsed(60, by: start.addingTimeInterval(-3_600)))
+    }
+
     @Test func rawTierIsBounded() {
         var history = MemoryHistory(retention: .sevenDays)
         for second in 0..<(HistoryTier.raw.capacity + 500) {

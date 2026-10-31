@@ -106,7 +106,8 @@ actor HistoryWriter {
 final class HistoryStore {
     static let eventCapacity = 300
     /// History is written at most this often while running, plus on sleep, power-off, and quit.
-    static let saveInterval: TimeInterval = 300
+    /// Each save rewrites the whole file (about 0.7 MB with 24 hours of history), so not often.
+    static let saveInterval: TimeInterval = 900
     /// The first save happens this soon after launch, so short sessions are kept too.
     static let firstSaveDelay: TimeInterval = 60
 
@@ -202,7 +203,7 @@ final class HistoryStore {
 
     /// Saves in the background if the save interval has elapsed.
     func saveIfDue(now: Date = Date()) {
-        guard let lastSaved, now.timeIntervalSince(lastSaved) >= Self.saveInterval else { return }
+        guard let lastSaved, lastSaved.hasElapsed(Self.saveInterval, by: now) else { return }
         save(now: now)
     }
 

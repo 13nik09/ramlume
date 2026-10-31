@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import Testing
 @testable import RamLume
 
@@ -305,6 +306,22 @@ struct MonitoringCoordinatorTests {
         await coordinator.scanProcessesNow()
         #expect(coordinator.current.processes?.largestAccessibleGroup?.displayName == "Brave Browser")
         #expect(coordinator.current.insights.contains { $0.id.hasPrefix("largest-consumer") })
+    }
+
+    /// The pause controls (panel menu and note, dashboard toolbar, Settings) read `isPausedByUser`.
+    /// Sampling stops while paused, so nothing else would make them update.
+    @Test func pausingNotifiesViewsThatShowThePauseState() {
+        final class Changes: @unchecked Sendable { var count = 0 }
+        let changes = Changes()
+        coordinator.start()
+        withObservationTracking { _ = coordinator.isPausedByUser } onChange: { changes.count += 1 }
+        coordinator.setPaused(true)
+        #expect(changes.count == 1)
+        #expect(coordinator.isPausedByUser)
+        withObservationTracking { _ = coordinator.isPausedByUser } onChange: { changes.count += 1 }
+        coordinator.setPaused(false)
+        #expect(changes.count == 2)
+        #expect(!coordinator.isPausedByUser)
     }
 
     @Test func clearHistoryEmptiesStore() {

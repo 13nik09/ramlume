@@ -362,11 +362,25 @@ extension MemoryHistory {
             }
         }
         gaps = RingBuffer(capacity: gaps.capacity, elements: archive.gaps.sorted { $0.start < $1.start })
+        // Saved while the clock was ahead: drop what's now dated in the future, as `append` does
+        // when the clock is set back while RamLume runs, so the history stays chronological.
+        if archive.savedAt.timeIntervalSince(now) > Self.clockStepTolerance {
+            discardData(after: now)
+        }
         // RamLume stopped observing when the archive was saved (bucket ends can lie later than
         // the last sample, so they don't mark the start of the downtime).
         if now > archive.savedAt {
             gaps.append(HistoryGap(start: archive.savedAt, end: now, reason: .appNotRunning))
         }
         prune(now: now)
+    }
+}
+
+extension Date {
+    /// Whether `interval` has passed since this date. A clock set back since then (a negative
+    /// elapsed time) counts as passed, so periodic work doesn't stop until the clock catches up.
+    func hasElapsed(_ interval: TimeInterval, by now: Date) -> Bool {
+        let elapsed = now.timeIntervalSince(self)
+        return elapsed < 0 || elapsed >= interval
     }
 }

@@ -12,12 +12,23 @@ All notable changes to RamLume are documented here. The format follows
   the chart, the apps, and the recommendation fit in the window without scrolling.
 - Home uses about a third less CPU while it's visible (3.6 % to about 2.3 % of one core in an
   optimized build): its memory details no longer lay out their grid twice on every update.
+- The menu bar panel redraws less: its tiles and status badge update only when what they show
+  changes.
+- While the displays are asleep, RamLume samples at its slow idle rate even if the panel or the
+  dashboard was left open.
+- History is saved every 15 minutes instead of every 5 (and, as before, when the Mac sleeps or
+  RamLume quits). Each save rewrites the whole file, about 0.7 MB with 24 hours of history.
 
 ### Fixed
 
 - Chart time labels started at their grid lines instead of being centered under them: Swift
   Charts on macOS 27 ignores the label anchor RamLume used. Labels are now centered, and those
   near either end of the axis extend inwards instead of sticking out past the chart.
+- Pausing or resuming monitoring didn't notify the views that show it, and with sampling paused
+  nothing else redrew them: the panel's menu could still offer "Pause Monitoring" (which then
+  resumed) and its "Monitoring is paused" note could stay hidden.
+- Setting the clock back stopped process scans and history saves until the clock caught up, and
+  a history file saved while the clock was ahead kept data dated in the future.
 
 ## [0.1.0] — 2026-10-30
 

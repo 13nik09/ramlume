@@ -43,11 +43,12 @@ struct SamplingScheduler: Sendable, Equatable {
         screensAsleep: Bool
     ) -> SamplingCadence {
         let table = intervals(for: profile)
-        if visibility > .hidden {
-            return SamplingCadence(memoryInterval: table.visibleMemory, processInterval: table.visibleProcesses)
-        }
+        // First: a panel or dashboard left open doesn't count while nobody can see the displays.
         if screensAsleep {
             return SamplingCadence(memoryInterval: table.idleMemory, processInterval: table.idleProcesses)
+        }
+        if visibility > .hidden {
+            return SamplingCadence(memoryInterval: table.visibleMemory, processInterval: table.visibleProcesses)
         }
         return SamplingCadence(memoryInterval: table.backgroundMemory, processInterval: table.backgroundProcesses)
     }

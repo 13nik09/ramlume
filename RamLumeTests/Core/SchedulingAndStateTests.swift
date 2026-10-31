@@ -19,6 +19,11 @@ struct SamplingSchedulerTests {
         scheduler.screensAsleep = true
         #expect(scheduler.cadence.memoryInterval == 30)
         #expect(scheduler.cadence.processInterval == 300)
+        // A panel or dashboard left open doesn't count while nobody can see the displays.
+        scheduler.visibility = .menuPanel
+        #expect(scheduler.cadence == SamplingCadence(memoryInterval: 30, processInterval: 300))
+        scheduler.screensAsleep = false
+        #expect(scheduler.cadence.memoryInterval == 1)
     }
 
     @Test func lowPowerModeUsesEnergySaverWhenAllowed() {

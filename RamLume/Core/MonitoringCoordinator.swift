@@ -49,6 +49,9 @@ final class MonitoringCoordinator {
 
     private(set) var isScanningProcesses = false
     private(set) var status: MonitoringStateMachine.Status = .stopped
+    /// Whether the person paused monitoring. A copy of the state machine's flag, which observation
+    /// can't see: the pause controls read this, and nothing else changes while sampling is paused.
+    private(set) var isPausedByUser = false
     private(set) var scheduler = SamplingScheduler()
 
     /// Whether a RamLume surface is on screen.
@@ -120,7 +123,6 @@ final class MonitoringCoordinator {
 
     // MARK: - Lifecycle
 
-    var isPausedByUser: Bool { stateMachine.isPausedByUser }
     var isSampling: Bool { stateMachine.isSampling }
 
     func start() {
@@ -138,7 +140,7 @@ final class MonitoringCoordinator {
         let now = clock()
         let transition = stateMachine.handle(paused ? .pauseRequested : .resumeRequested)
         guard transition != .none else {
-            status = stateMachine.status
+            updateStatus()
             onUpdate?()
             return
         }
@@ -171,8 +173,15 @@ final class MonitoringCoordinator {
         history.saveSynchronously(now: clock())
     }
 
-    private func apply(_ transition: MonitoringStateMachine.Transition, at date: Date) {
+    private func updateStatus() {
         status = stateMachine.status
+        if isPausedByUser != stateMachine.isPausedByUser {
+            isPausedByUser = stateMachine.isPausedByUser
+        }
+    }
+
+    private func apply(_ transition: MonitoringStateMachine.Transition, at date: Date) {
+        updateStatus()
         switch transition {
         case .startSampling:
             history.endGap(at: date)
@@ -419,7 +428,7 @@ final class MonitoringCoordinator {
     private func shouldScanProcesses(at date: Date) -> Bool {
         guard processTask == nil else { return false }
         guard let lastProcessScan else { return true }
-        return date.timeIntervalSince(lastProcessScan) >= scheduler.cadence.processInterval
+        return lastProcessScan.hasElapsed(scheduler.cadence.processInterval, by: date)
     }
 
     /// Starts a process scan now unless one is already running. Does nothing while paused:
