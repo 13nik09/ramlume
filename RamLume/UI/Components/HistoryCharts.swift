@@ -21,12 +21,22 @@ private func gapTooltip(_ gap: HistoryGap) -> ChartTooltip {
     )
 }
 
-/// Standard time axis for a range. Labels are centered under their grid lines (by default Swift
-/// Charts starts each date label at its line, which reads as if labels and lines don't match).
-private func timeAxis(_ range: ChartRange) -> some AxisContent {
-    AxisMarks(values: .automatic(desiredCount: 5)) { _ in
+/// Standard time axis for a series. Labels are centered under their grid lines (by default Swift
+/// Charts starts each date label at its line, which reads as if labels and lines don't match, and
+/// recent versions ignore a label's `anchor`). A label in a 1-point frame overflows it evenly, so
+/// it centers on its line; near either end of the axis it extends inwards instead.
+private func timeAxis(_ series: HistorySeries) -> some AxisContent {
+    let format = ChartFormatting.timeFormat(for: series.range)
+    let domain = series.domain
+    return AxisMarks(values: .automatic(desiredCount: 5)) { value in
         AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
-        AxisValueLabel(format: ChartFormatting.timeFormat(for: range), anchor: .top)
+        AxisValueLabel(horizontalSpacing: 0) {
+            if let date = value.as(Date.self) {
+                Text(date, format: format)
+                    .fixedSize()
+                    .frame(width: 1, alignment: ChartFormatting.timeLabelAlignment(for: date, in: domain))
+            }
+        }
     }
 }
 
@@ -96,7 +106,7 @@ struct MemoryUsageChart: View {
         .clipsMarksToPlot()
         .chartYScale(domain: 0...max(total, 1))
         .chartLegend(.hidden)
-        .chartXAxis { timeAxis(series.range) }
+        .chartXAxis { timeAxis(series) }
         .chartYAxis { byteAxis(maximum: total) }
         .chartOverlay { proxy in
             ChartCrosshair(
@@ -222,7 +232,7 @@ struct CompressionChart: View {
         .chartXScale(domain: series.domain)
         .clipsMarksToPlot()
         .chartYScale(domain: 0...maximum)
-        .chartXAxis { timeAxis(series.range) }
+        .chartXAxis { timeAxis(series) }
         .chartYAxis { byteAxis(maximum: maximum) }
         .chartOverlay { proxy in
             ChartCrosshair(
@@ -281,7 +291,7 @@ struct SwapChart: View {
         .chartXScale(domain: series.domain)
         .clipsMarksToPlot()
         .chartYScale(domain: 0...maximum)
-        .chartXAxis { timeAxis(series.range) }
+        .chartXAxis { timeAxis(series) }
         .chartYAxis { byteAxis(maximum: maximum) }
         .chartOverlay { proxy in
             ChartCrosshair(
@@ -477,7 +487,7 @@ struct SwapActivityChart: View {
         .chartXScale(domain: series.domain)
         .clipsMarksToPlot()
         .chartYScale(domain: 0...maximum)
-        .chartXAxis { timeAxis(series.range) }
+        .chartXAxis { timeAxis(series) }
         .chartYAxis {
             AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { value in
                 AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))

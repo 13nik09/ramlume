@@ -4,6 +4,19 @@ All notable changes to RamLume are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- Home shows the memory details below the largest apps and the recommendation, so the status,
+  the chart, the apps, and the recommendation fit in the window without scrolling.
+
+### Fixed
+
+- Chart time labels started at their grid lines instead of being centered under them: Swift
+  Charts on macOS 27 ignores the label anchor RamLume used. Labels are now centered, and those
+  near either end of the axis extend inwards instead of sticking out past the chart.
+
 ## [0.1.0] — 2026-10-30
 
 First public version. Release notes: [docs/release-notes/v0.1.0.md](docs/release-notes/v0.1.0.md).
@@ -87,4 +100,5 @@ First public version. Release notes: [docs/release-notes/v0.1.0.md](docs/release
   doesn't document; see [docs/memory-metrics.md](docs/memory-metrics.md) for why and for the
   fallback.
 
+[Unreleased]: https://github.com/13nik09/ramlume/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/13nik09/ramlume/releases/tag/v0.1.0

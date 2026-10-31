@@ -90,6 +90,17 @@ enum ChartFormatting {
         }
     }
 
+    /// Time labels center on their grid lines, except in the outer tenth of the axis at each end,
+    /// where a centered label could stick out past the chart: there they extend inwards.
+    static func timeLabelAlignment(for date: Date, in domain: ClosedRange<Date>) -> Alignment {
+        let span = domain.upperBound.timeIntervalSince(domain.lowerBound)
+        guard span > 0 else { return .center }
+        let position = date.timeIntervalSince(domain.lowerBound) / span
+        if position < 0.1 { return .leading }
+        if position > 0.9 { return .trailing }
+        return .center
+    }
+
     static func tooltipTime(for point: HistoryPoint) -> String {
         if point.duration <= 0 {
             return point.start.formatted(.dateTime.hour().minute().second())

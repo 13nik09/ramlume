@@ -14,7 +14,7 @@ macOS kernel, never guesses, and runs entirely on your Mac.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/home-dark.png">
-  <img alt="RamLume's Home page: the health status in one sentence, the memory figures Activity Monitor shows, and memory in use over 24 hours with a night's sleep shown as a gap" src="docs/images/home-light.png">
+  <img alt="RamLume's Home page: the health status in one sentence, memory in use over 24 hours with a night's sleep shown as a gap, the largest apps, and the current recommendation" src="docs/images/home-light.png">
 </picture>
 
 <sub>Screenshots show example data.</sub>

@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import Testing
 @testable import RamLume
 
@@ -107,6 +108,16 @@ struct ChartDataTests {
         #expect(gaps.allSatisfy { visible.domain.contains($0.start) && visible.domain.contains($0.end) })
         // Hover still reports the whole gap.
         #expect(visible.gap(containing: rangeStart.addingTimeInterval(60)) == visible.gaps[0])
+    }
+
+    // MARK: Time axis
+
+    @Test func timeLabelsCenterOnTheirLinesExceptNearTheEnds() {
+        let domain = start...start.addingTimeInterval(1_000)
+        #expect(ChartFormatting.timeLabelAlignment(for: start.addingTimeInterval(50), in: domain) == .leading)
+        #expect(ChartFormatting.timeLabelAlignment(for: start.addingTimeInterval(500), in: domain) == .center)
+        #expect(ChartFormatting.timeLabelAlignment(for: start.addingTimeInterval(950), in: domain) == .trailing)
+        #expect(ChartFormatting.timeLabelAlignment(for: start, in: start...start) == .center)
     }
 
     // MARK: Pressure timeline

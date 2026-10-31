@@ -12,12 +12,13 @@ struct HomeView: View {
                     let figures = MemoryFigures(snapshot)
                     HomeHealthCard(summary: HealthSummary(assessment: monitor.health, figures: figures, pressure: monitor.pressure.level))
                         .equatable()
-                    HomeDetailsCard(figures: figures, pressure: monitor.pressure.level)
                     HomeUsageCard()
                     AdaptiveRow(threshold: 760) {
                         HomeTopAppsCard()
                         HomeRecommendationCard()
                     }
+                    // Below the three questions Home answers first, so they stay in view.
+                    HomeDetailsCard(figures: figures, pressure: monitor.pressure.level)
                 } else {
                     DashboardUnavailableView(error: monitor.readError)
                 }
