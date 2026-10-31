@@ -43,7 +43,7 @@ private struct PanelHeader: View {
             Text(AppInfo.name)
                 .font(.headline)
             Spacer()
-            HealthBadge(state: app.monitor.health.state, compact: true)
+            PanelHealthBadge()
             Menu {
                 Button("Open Dashboard") { app.openDashboard() }
                 Button("Settings…") { app.openSettings() }
@@ -63,6 +63,16 @@ private struct PanelHeader: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
+    }
+}
+
+/// Reads the health in a view of its own: the assessment's evidence text changes with nearly every
+/// sample, and reading it in the header would rebuild the header and its menu every second.
+private struct PanelHealthBadge: View {
+    @Environment(AppModel.self) private var app
+
+    var body: some View {
+        HealthBadge(state: app.monitor.health.state, compact: true)
     }
 }
 
