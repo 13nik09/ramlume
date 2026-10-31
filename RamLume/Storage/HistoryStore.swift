@@ -106,7 +106,7 @@ actor HistoryWriter {
 final class HistoryStore {
     static let eventCapacity = 300
     /// History is written at most this often while running, plus on sleep, power-off, and quit.
-    /// Each save rewrites the whole file (about 0.7 MB with 24 hours of history), so not often.
+    /// Each save rewrites the whole file (several hundred KB with a day of history), so not often.
     static let saveInterval: TimeInterval = 900
     /// The first save happens this soon after launch, so short sessions are kept too.
     static let firstSaveDelay: TimeInterval = 60

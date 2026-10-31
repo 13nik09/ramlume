@@ -8,9 +8,9 @@ macOS kernel, never guesses, and runs entirely on your Mac.
 
 [![CI](https://github.com/13nik09/ramlume/actions/workflows/ci.yml/badge.svg)](https://github.com/13nik09/ramlume/actions/workflows/ci.yml)
 
-> **Status: 0.1.0, the first public version.** Release builds are universal (Apple silicon and
-> Intel) and **not notarized** unless a release says otherwise, so macOS asks you to confirm the
-> first launch. See [Installation](#installation).
+> **Status: 0.1.1.** Release builds are universal (Apple silicon and Intel) and **not notarized**
+> unless a release says otherwise, so macOS asks you to confirm the first launch. See
+> [Installation](#installation).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/home-dark.png">
@@ -88,7 +88,7 @@ attention. It never sells you a "RAM cleaner".
    [Releases page](https://github.com/13nik09/ramlume/releases).
 2. Optionally, check the download against the SHA-256 checksum in the release notes:
    ```bash
-   shasum -a 256 ~/Downloads/RamLume-0.1.0-macOS.zip
+   shasum -a 256 ~/Downloads/RamLume-0.1.1-macOS.zip
    ```
 3. Double-click the zip, then drag **RamLume** into your **Applications** folder. (Launch at
    login works reliably only from there.)
@@ -160,7 +160,8 @@ the numbers.
 - [Building, signing, and releasing](docs/building.md)
 - [Roadmap](docs/roadmap.md)
 - [Contributing](CONTRIBUTING.md)
-- [Changelog](CHANGELOG.md) and [0.1.0 release notes](docs/release-notes/v0.1.0.md)
+- [Changelog](CHANGELOG.md) and release notes for [0.1.1](docs/release-notes/v0.1.1.md) and
+  [0.1.0](docs/release-notes/v0.1.0.md)
 
 ## Contributing
 

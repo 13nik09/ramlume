@@ -11,8 +11,8 @@
 // items with the official app.
 RAMLUME_BUNDLE_ID_PREFIX = io.github.13nik09
 
-MARKETING_VERSION = 0.1.0
-CURRENT_PROJECT_VERSION = 1
+MARKETING_VERSION = 0.1.1
+CURRENT_PROJECT_VERSION = 2
 MACOSX_DEPLOYMENT_TARGET = 14.0
 
 // Universal binary (Apple silicon + Intel) for Release builds.

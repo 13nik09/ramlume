@@ -40,8 +40,8 @@ Everything you're likely to change lives in `Configuration/Base.xcconfig`:
 | Setting | Default | Notes |
 |---|---|---|
 | `RAMLUME_BUNDLE_ID_PREFIX` | `io.github.13nik09` | The official builds are `io.github.13nik09.RamLume`. If you distribute your own modified build, use a prefix you control so it doesn't share preferences, notification permission, or a login item with the official app. |
-| `MARKETING_VERSION` | `0.1.0` | The release version. |
-| `CURRENT_PROJECT_VERSION` | `1` | The build number; increase it for every published build. |
+| `MARKETING_VERSION` | `0.1.1` | The release version. |
+| `CURRENT_PROJECT_VERSION` | `2` | The build number; increase it for every published build. |
 | `CODE_SIGN_IDENTITY` | `-` (ad-hoc) | Leave as is; `make-release.sh` re-signs with your Developer ID (below). |
 | `DEVELOPMENT_TEAM` | empty | Your Team ID, if you sign in Xcode. |
 

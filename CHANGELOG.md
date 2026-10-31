@@ -4,7 +4,9 @@ All notable changes to RamLume are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.1.1] — 2026-10-30
+
+Release notes: [docs/release-notes/v0.1.1.md](docs/release-notes/v0.1.1.md).
 
 ### Changed
 
@@ -17,7 +19,7 @@ All notable changes to RamLume are documented here. The format follows
 - While the displays are asleep, RamLume samples at its slow idle rate even if the panel or the
   dashboard was left open.
 - History is saved every 15 minutes instead of every 5 (and, as before, when the Mac sleeps or
-  RamLume quits). Each save rewrites the whole file, about 0.7 MB with 24 hours of history.
+  RamLume quits). Each save rewrites the whole file, several hundred KB with a day of history.
 
 ### Fixed
 
@@ -113,5 +115,5 @@ First public version. Release notes: [docs/release-notes/v0.1.0.md](docs/release
   doesn't document; see [docs/memory-metrics.md](docs/memory-metrics.md) for why and for the
   fallback.
 
-[Unreleased]: https://github.com/13nik09/ramlume/compare/v0.1.0...HEAD
+[0.1.1]: https://github.com/13nik09/ramlume/releases/tag/v0.1.1
 [0.1.0]: https://github.com/13nik09/ramlume/releases/tag/v0.1.0
