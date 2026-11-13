@@ -4,18 +4,44 @@ import AppKit
 /// and its key equivalents (⌘W, ⌘C, ⌘Q, …) work in RamLume's windows at all times.
 @MainActor
 enum MainMenuBuilder {
+    private static weak var windowMenuItem: NSMenuItem?
+    private static weak var windowMenuTarget: AnyObject?
+    private static var isWindowMenuRegistered = false
+
     static func makeMainMenu(target: AnyObject) -> NSMenu {
         let mainMenu = NSMenu()
         mainMenu.addItem(submenuItem(appMenu(target: target)))
         mainMenu.addItem(submenuItem(editMenu()))
         mainMenu.addItem(submenuItem(viewMenu(target: target)))
-        let window = windowMenu(target: target)
-        mainMenu.addItem(submenuItem(window))
+        let window = submenuItem(windowMenu(target: target))
+        mainMenu.addItem(window)
         let help = helpMenu(target: target)
         mainMenu.addItem(submenuItem(help))
-        NSApp.windowsMenu = window
+        windowMenuItem = window
+        windowMenuTarget = target
+        isWindowMenuRegistered = false
         NSApp.helpMenu = help
         return mainMenu
+    }
+
+    /// Makes the Window menu AppKit's windows menu while RamLume has a window, and not otherwise.
+    ///
+    /// AppKit adds the system's window items (tiling, Move & Resize) to its windows menu and
+    /// works through them whenever the app's menus are read, and macOS can read them every time
+    /// something RamLume shows changes. With only the menu bar panel open there's no menu bar of
+    /// RamLume's to show that menu in; in one profile it was a third of the panel's CPU.
+    ///
+    /// AppKit ignores `windowsMenu = nil`, so a registered menu is taken out of use by showing a
+    /// new one in its place, and registering means showing (and registering) another new one: no
+    /// menu is registered twice. Windows that are open get their entries in the new menu.
+    static func setWindowMenuRegistered(_ registered: Bool) {
+        guard registered != isWindowMenuRegistered, let item = windowMenuItem, let target = windowMenuTarget else { return }
+        isWindowMenuRegistered = registered
+        let menu = windowMenu(target: target)
+        item.submenu = menu
+        if registered {
+            NSApp.windowsMenu = menu
+        }
     }
 
     private static func submenuItem(_ menu: NSMenu) -> NSMenuItem {

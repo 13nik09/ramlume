@@ -93,6 +93,23 @@ struct NotificationPolicyTests {
         #expect(critical.map(\.kind) == [.criticalPressure])
     }
 
+    /// A cooldown measured against a clock that was set back would otherwise last until the
+    /// clock caught up again.
+    @Test func aClockSetBackDoesNotSilenceAlerts() {
+        var policy = NotificationPolicy()
+        #expect(policy.evaluate(input(pressure: .critical), preferences: enabled).map(\.kind) == [.criticalPressure])
+        _ = policy.evaluate(input(at: 60, pressure: .normal), preferences: enabled)        // episode ends
+        // The clock now reads a day earlier.
+        let earlier = policy.evaluate(input(at: -86_400, pressure: .critical), preferences: enabled)
+        #expect(earlier.map(\.kind) == [.criticalPressure])
+
+        var spaced = NotificationPolicy()
+        _ = spaced.evaluate(input(swapChange: Int64(3 * Fixtures.gib)), preferences: enabled)
+        let finding = ProcessGrowthFinding(id: "app:/Applications/Foo.app", displayName: "Foo", startBytes: Fixtures.gib, endBytes: 3 * Fixtures.gib, duration: 2_400)
+        let afterStep = spaced.evaluate(input(at: -86_400, growth: [finding]), preferences: enabled)
+        #expect(afterStep.map(\.kind) == [.appMemoryGrowth])
+    }
+
     @Test func respectsIndividualToggles() {
         var policy = NotificationPolicy()
         var preferences = enabled

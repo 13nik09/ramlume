@@ -59,6 +59,22 @@ struct MemoryFormatterTests {
         #expect(MemoryFormatter.string(fromBytes: 1_014 * MemoryUnits.mebibyte, locale: posix) == "0.99 GB")
     }
 
+    /// The unit follows the rounded value, so 999.7 MB doesn't read "1,000 MB".
+    @Test func unitsSwitchOnTheRoundedValue() {
+        let justUnderAThousandMegabytes = UInt64(999.7 * Double(MemoryUnits.mebibyte))
+        #expect(MemoryFormatter.string(fromBytes: justUnderAThousandMegabytes, locale: posix) == "0.98 GB")
+        #expect(MemoryFormatter.string(fromBytes: justUnderAThousandMegabytes, style: .compact, locale: posix) == "1 GB")
+        let justUnderAMegabyte = UInt64(1_023.7 * Double(MemoryUnits.kibibyte))
+        #expect(MemoryFormatter.string(fromBytes: justUnderAMegabyte, locale: posix) == "1.0 MB")
+        #expect(MemoryFormatter.string(fromBytes: justUnderAMegabyte, style: .compact, locale: posix) == "1 MB")
+    }
+
+    @Test func processCountsArePluralizedCorrectly() {
+        #expect(MemoryFormatter.processCount(1) == "1 process")
+        #expect(MemoryFormatter.processCount(0) == "0 processes")
+        #expect(MemoryFormatter.processCount(12) == "12 processes")
+    }
+
     @Test func compactStyleDropsTrailingZero() {
         #expect(MemoryFormatter.string(fromBytes: 2 * MemoryUnits.gibibyte, style: .compact, locale: posix) == "2 GB")
         #expect(MemoryFormatter.string(fromBytes: 16 * MemoryUnits.gibibyte, style: .compact, locale: posix) == "16 GB")

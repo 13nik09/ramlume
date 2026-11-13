@@ -148,7 +148,7 @@ enum DiagnosticsEngine {
         let executableName = top.processes.first.map { ($0.executablePath ?? $0.name) }.map { ($0 as NSString).lastPathComponent }
         let advice = KnownApplications.advice(forBundleIdentifier: top.bundleIdentifier, executableName: executableName)
         let size = MemoryFormatter.string(fromBytes: top.totalFootprint, style: .compact)
-        let processes = top.processes.count == 1 ? "" : " across \(top.accessibleCount) processes"
+        let processes = top.accessibleCount == 1 ? "" : " across \(top.accessibleCount) processes"
 
         var message = "\(top.displayName) is the largest memory user RamLume can measure: \(size)\(processes) (\(MemoryFormatter.percent(share)) of RAM)."
         if let context = advice?.context {

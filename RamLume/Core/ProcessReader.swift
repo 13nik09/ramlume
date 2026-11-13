@@ -31,7 +31,7 @@ actor ProcessReader: ProcessProviding {
         var records: [ProcessRecord] = []
         records.reserveCapacity(pids.count)
         for pid in pids {
-            records.append(readRecord(pid: pid))
+            if let record = record(forPID: pid) { records.append(record) }
         }
 
         let bundlePaths = Set(records.compactMap(\.appBundlePath))
@@ -56,7 +56,11 @@ actor ProcessReader: ProcessProviding {
 
     // MARK: - Per-process reads
 
-    private func readRecord(pid: pid_t) -> ProcessRecord {
+    /// One process, or `nil` if it has exited since it was listed: `ESRCH` means there's nothing
+    /// left to measure, which isn't the same as not being allowed to (`EPERM`).
+    func record(forPID pid: pid_t) -> ProcessRecord? {
+        let usage = Self.resourceUsage(pid: pid)
+        if usage.info == nil, usage.errorNumber == ESRCH { return nil }
         let path = Self.executablePath(pid: pid)
         let bundlePath = path.flatMap(ProcessGrouper.outermostAppBundlePath(forExecutablePath:))
         let pathName = path.map { ($0 as NSString).lastPathComponent }
@@ -71,8 +75,6 @@ actor ProcessReader: ProcessProviding {
             ?? "Process \(pid)"
         let shortInfo = Self.shortBSDInfo(pid: pid)
         let userID = shortInfo.map { UInt32($0.pbsi_uid) }
-
-        let usage = Self.resourceUsage(pid: pid)
         let access: ProcessRecord.Access = usage.info != nil ? .accessible : .restricted(errno: usage.errorNumber)
 
         return ProcessRecord(

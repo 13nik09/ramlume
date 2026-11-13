@@ -143,7 +143,7 @@ struct TopAppRow: View {
                             .foregroundStyle(.secondary)
                             .padding(.horizontal, 5)
                             .background(Color.primary.opacity(0.06), in: Capsule())
-                            .help("\(group.processes.count) processes")
+                            .help(MemoryFormatter.processCount(group.processes.count))
                     }
                     Spacer(minLength: 8)
                     Text(MemoryFormatter.string(fromBytes: group.totalFootprint))
@@ -161,7 +161,7 @@ struct TopAppRow: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(group.displayName), \(MemoryFormatter.string(fromBytes: group.totalFootprint)), \(group.processes.count) processes, \(MemoryFormatter.percent(share)) of memory")
-        .help("\(group.displayName): physical footprint summed over \(group.accessibleCount) process\(group.accessibleCount == 1 ? "" : "es")")
+        .accessibilityLabel("\(group.displayName), \(MemoryFormatter.string(fromBytes: group.totalFootprint)), \(MemoryFormatter.processCount(group.processes.count)), \(MemoryFormatter.percent(share)) of memory")
+        .help("\(group.displayName): physical footprint summed over \(MemoryFormatter.processCount(group.accessibleCount))")
     }
 }

@@ -4,6 +4,38 @@ All notable changes to RamLume are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.1.2] — 2026-11-13
+
+Release notes: [docs/release-notes/v0.1.2.md](docs/release-notes/v0.1.2.md).
+
+### Changed
+
+- The dashboard does less work on pages that update every second. A page's layout was measured
+  several times on each update, to answer size questions whose answers never changed anything;
+  now it's measured once. On Advanced › Memory in a window that fills a 14-inch display, that
+  roughly halves the work (about 120 million instructions per second down to 45–85 million in an
+  optimized build). On Home the same pass is gone, but drawing the chart dominates there and the
+  total stays within run-to-run variation. History, which redraws on a timer, is unchanged.
+- With only the menu bar panel open, RamLume no longer keeps a Window menu registered with
+  AppKit. AppKit works through a registered windows menu every time the app's menus are read,
+  and macOS can read them whenever the panel's content changes; in one profile that was a third
+  of the panel's CPU. The Window menu is unchanged while the dashboard or Settings is open.
+
+### Fixed
+
+- Charts kept showing the old data after history was cleared, monitoring was paused or resumed,
+  or the retention setting changed, until their next timed redraw (up to 30 seconds on the
+  24-hour range and 60 on the 7-day range). They now redraw at once.
+- A process that exited while RamLume was scanning was counted, and with Show Restricted on
+  listed, as a restricted process until the next scan.
+- After the clock was set back, notifications stayed silent until the clock caught up with the
+  time of the last one.
+- An app with one measurable process and one restricted one was described as using memory
+  "across 1 processes", and VoiceOver read single-process apps as "1 processes".
+- A size just under the next unit read "1,000 MB" or "1,024 KB" instead of "0.98 GB" or "1.0 MB".
+- With another user's session in front (fast user switching), the displays waking put RamLume
+  back on its 5-second background sampling instead of the idle rate.
+
 ## [0.1.1] — 2026-10-30
 
 Release notes: [docs/release-notes/v0.1.1.md](docs/release-notes/v0.1.1.md).
@@ -115,5 +147,6 @@ First public version. Release notes: [docs/release-notes/v0.1.0.md](docs/release
   doesn't document; see [docs/memory-metrics.md](docs/memory-metrics.md) for why and for the
   fallback.
 
+[0.1.2]: https://github.com/13nik09/ramlume/releases/tag/v0.1.2
 [0.1.1]: https://github.com/13nik09/ramlume/releases/tag/v0.1.1
 [0.1.0]: https://github.com/13nik09/ramlume/releases/tag/v0.1.0

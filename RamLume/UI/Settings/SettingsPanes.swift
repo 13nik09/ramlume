@@ -1,5 +1,4 @@
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct GeneralSettingsView: View {
     @Environment(AppModel.self) private var app

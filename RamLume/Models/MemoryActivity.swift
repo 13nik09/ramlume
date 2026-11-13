@@ -30,11 +30,6 @@ struct MemoryActivity: Sendable, Equatable, Codable {
         case faults = "fa"
     }
 
-    static let zero = MemoryActivity(
-        interval: 0, swapInBytes: 0, swapOutBytes: 0, pageInBytes: 0, pageOutBytes: 0,
-        compressedPages: 0, decompressedPages: 0, faults: 0
-    )
-
     /// Computes the activity between two readings, or `nil` when the readings are not comparable:
     /// a non-positive or excessively long interval, a page-size change, or any counter that went
     /// backwards. No value is estimated in those cases.

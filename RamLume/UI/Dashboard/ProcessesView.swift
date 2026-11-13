@@ -19,8 +19,6 @@ struct ProcessTableRow: Identifiable, Hashable, Sendable {
 
     var footprintSortKey: UInt64 { footprint ?? 0 }
     var shareSortKey: UInt64 { footprint ?? 0 }
-    var pidSortKey: Int32 { pid ?? (children?.compactMap(\.pid).min() ?? -1) }
-    var userSortKey: String { userName ?? "" }
     var searchText: String {
         [name, executablePath ?? "", bundleIdentifier ?? "", pid.map { String($0) } ?? ""].joined(separator: " ")
     }
@@ -37,14 +35,12 @@ struct ProcessTableRow: Identifiable, Hashable, Sendable {
             guard groupMatches || !matchingChildren.isEmpty else { return nil }
 
             if group.processes.count == 1, let only = childRows.first {
-                var row = only
-                row = ProcessTableRow(
+                return ProcessTableRow(
                     id: group.id, name: group.displayName, pid: only.pid, footprint: only.footprint,
                     peakFootprint: only.peakFootprint, processCount: 1, restrictedCount: only.restrictedCount,
                     userName: only.userName, iconPath: group.representativePath, executablePath: only.executablePath,
                     bundleIdentifier: group.bundleIdentifier, isGroup: false, roleDescription: only.roleDescription, children: nil
                 )
-                return row
             }
             let accessible = members.compactMap(\.footprint)
             return ProcessTableRow(
@@ -206,7 +202,7 @@ private struct ProcessTable: View {
                             .foregroundStyle(.secondary)
                             .padding(.horizontal, 5)
                             .background(Color.primary.opacity(0.07), in: Capsule())
-                            .accessibilityLabel("\(row.processCount) processes")
+                            .accessibilityLabel(MemoryFormatter.processCount(row.processCount))
                     }
                 }
                 .help(row.executablePath ?? row.name)

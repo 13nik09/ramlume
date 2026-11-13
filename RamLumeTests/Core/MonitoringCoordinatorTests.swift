@@ -54,16 +54,43 @@ struct MonitoringCoordinatorTests {
 
         coordinator.setVisible(true, surface: .menuPanel)
         #expect(coordinator.snapshot == coordinator.current.snapshot)
-        let revisionWhileVisible = history.revision
         sample()
-        #expect(history.revision > revisionWhileVisible)
+        #expect(coordinator.snapshot == coordinator.current.snapshot)
 
         coordinator.setVisible(false, surface: .menuPanel)
-        let revisionWhenHidden = history.revision
         let publishedWhenHidden = coordinator.snapshot
         sample()
         #expect(coordinator.snapshot == publishedWhenHidden)
-        #expect(history.revision == revisionWhenHidden)
+    }
+
+    /// Charts redraw on their own timers, so a sample mustn't invalidate them; a gap, a pause, or
+    /// cleared history has to show at once.
+    @Test func historyTellsChartsAboutGapsAndClearingButNotAboutSamples() {
+        coordinator.start()
+        coordinator.setVisible(true, surface: .dashboard)
+        sample()
+        let afterFirstSample = history.revision
+        sample()
+        #expect(history.revision == afterFirstSample)
+
+        coordinator.setPaused(true)
+        let paused = history.revision
+        #expect(paused != afterFirstSample)
+        coordinator.setPaused(false)
+        let resumed = history.revision
+        #expect(resumed != paused)
+        coordinator.clearHistory()
+        #expect(history.revision != resumed)
+    }
+
+    @Test func clearingHistoryNotifiesViewsThatShowIt() {
+        coordinator.start()
+        sample()
+        final class Changes: @unchecked Sendable { var count = 0 }
+        let changes = Changes()
+        withObservationTracking { _ = history.revision } onChange: { changes.count += 1 }
+        coordinator.clearHistory()
+        #expect(changes.count == 1)
     }
 
     @Test func visibilityChangesCadence() {
@@ -287,9 +314,9 @@ struct MonitoringCoordinatorTests {
         }
         #expect(coordinator.scheduler.visibility == .hidden)
         #expect(coordinator.scheduler.cadence.memoryInterval == 5)
-        let revision = history.revision
+        let published = coordinator.snapshot
         sample()
-        #expect(history.revision == revision)   // nothing is published while nothing is visible
+        #expect(coordinator.snapshot == published)   // nothing is published while nothing is visible
     }
 
     @Test func swapGrowthIsLogged() {
@@ -411,5 +438,18 @@ struct LiveSystemReaderTests {
         let record = try #require(snapshot.groups.flatMap(\.processes).first { $0.pid == me })
         #expect(record.isAccessible)
         #expect((record.footprint ?? 0) > 0)
+    }
+
+    /// A process that exits between being listed and being read isn't "restricted": it's gone.
+    @Test func processReaderLeavesOutProcessesThatHaveExited() async throws {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/true")
+        try process.run()
+        process.waitUntilExit()
+        let reader = ProcessReader()
+        #expect(await reader.record(forPID: process.processIdentifier) == nil)
+        // A process RamLume isn't allowed to measure is still listed, as restricted.
+        let launchd = try #require(await reader.record(forPID: 1))
+        #expect(!launchd.isAccessible)
     }
 }

@@ -11,6 +11,4 @@ struct SwapUsage: Sendable, Equatable, Codable {
     var used: UInt64
     var available: UInt64
     var isEncrypted: Bool
-
-    var usedFraction: Double? { MemoryUnits.fraction(used, of: total) }
 }

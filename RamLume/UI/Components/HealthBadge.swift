@@ -23,23 +23,6 @@ struct HealthBadge: View {
     }
 }
 
-/// The kernel-reported pressure level as icon + label.
-struct PressureLabel: View {
-    var level: MemoryPressureLevel?
-
-    var body: some View {
-        Label {
-            Text(level?.displayName ?? "Not reported")
-        } icon: {
-            Circle()
-                .fill(Palette.pressure(level))
-                .frame(width: 8, height: 8)
-        }
-        .labelStyle(.titleAndIcon)
-        .accessibilityLabel("macOS memory pressure: \(level?.displayName ?? "not reported")")
-    }
-}
-
 /// Marks a value's provenance. Estimates carry a visible "≈" so they're never mistaken for
 /// direct readings.
 struct ProvenanceMark: View {

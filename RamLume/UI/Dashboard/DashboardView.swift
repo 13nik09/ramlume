@@ -18,9 +18,10 @@ struct DashboardView: View {
                 MonitoringStatusFooter()
             }
         } detail: {
-            detail
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color(nsColor: .windowBackgroundColor))
+            FillingLayout {
+                detail
+            }
+            .background(Color(nsColor: .windowBackgroundColor))
         }
         .navigationTitle(app.dashboardSection?.title ?? "RamLume")
         .toolbar {
@@ -121,8 +122,9 @@ private struct MonitoringStatusFooter: View {
     }
 }
 
-/// Provides history for a range, refreshing on every sample for short ranges and on a slower
-/// timer for long ones (their buckets change slowly, so redrawing every second would be waste).
+/// Provides history for a range, on a timer that suits the range: long ranges change slowly, and
+/// even a short one doesn't need redrawing with every sample. Changes that must show at once (a
+/// pause or another gap, a new retention setting, cleared history) don't wait for the timer.
 struct HistorySeriesReader<Content: View>: View {
     @Environment(AppModel.self) private var app
     var range: ChartRange
@@ -131,22 +133,20 @@ struct HistorySeriesReader<Content: View>: View {
 
     var body: some View {
         let store = app.monitor.history
+        let _ = store.revision
         if !app.monitor.isPresenting {
             // Hidden or covered: render once, without a refresh timer.
             content(store.history.series(for: range, now: Date(), maxPoints: maxPoints))
-        } else if let interval = Self.refreshInterval(for: range) {
-            TimelineView(.periodic(from: .now, by: interval)) { context in
+        } else {
+            TimelineView(.periodic(from: .now, by: Self.refreshInterval(for: range))) { context in
                 content(store.history.series(for: range, now: context.date, maxPoints: maxPoints))
             }
-        } else {
-            let _ = store.revision
-            content(store.history.series(for: range, now: Date(), maxPoints: maxPoints))
         }
     }
 
     /// How often charts for a range redraw. Samples still arrive every second; redrawing a
     /// stacked chart that often costs several percent of a CPU core for no visible benefit.
-    static func refreshInterval(for range: ChartRange) -> TimeInterval? {
+    static func refreshInterval(for range: ChartRange) -> TimeInterval {
         switch range {
         case .fiveMinutes: 2
         case .fifteenMinutes: 3
@@ -154,6 +154,39 @@ struct HistorySeriesReader<Content: View>: View {
         case .oneDay: 30
         case .sevenDays: 60
         }
+    }
+}
+
+/// Fills the space it's offered without asking its content how large it would like to be.
+///
+/// The dashboard's detail column always fills the window, whatever is in it. Behind a flexible
+/// frame, every size question from AppKit and SwiftUI (minimum size, ideal size, alignment) was
+/// passed on to the page's scroll view, which measured its whole content again for each one, with
+/// a different proposal every time. On a page that updates every second, in a large window, that
+/// was about half of the main thread's work. Nothing depends on the answers, so this layout
+/// doesn't ask.
+struct FillingLayout: Layout {
+    /// Used for a dimension nobody proposed. The window sets the real size.
+    static let nominalSize = CGSize(width: 640, height: 480)
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        proposal.replacingUnspecifiedDimensions(by: Self.nominalSize)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for subview in subviews {
+            subview.place(at: bounds.origin, anchor: .topLeading, proposal: ProposedViewSize(bounds.size))
+        }
+    }
+
+    // No alignment guides of its own. The default implementations place the subviews for whatever
+    // size is being asked about, to merge their guides, which measures the page after all.
+    func explicitAlignment(of guide: HorizontalAlignment, in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGFloat? {
+        nil
+    }
+
+    func explicitAlignment(of guide: VerticalAlignment, in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGFloat? {
+        nil
     }
 }
 

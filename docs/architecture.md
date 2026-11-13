@@ -77,13 +77,25 @@ immediately. Process refreshes requested while paused are ignored.
 The coordinator keeps an always-current `MonitoringState` (`current`) that drives the status
 item, diagnostics, and notifications. SwiftUI reads separate published properties that are
 refreshed only while a RamLume surface is visible, and each is assigned only when it changed.
-History appends bump an observable `revision` the same way. As a result, a closed panel or a
-hidden dashboard causes no view updates at all, and when a surface appears it is refreshed
-immediately.
+As a result, a closed panel or a hidden dashboard causes no view updates at all, and when a
+surface appears it is refreshed immediately.
 
 Charts redraw on their own schedule (every 2 s for the 5-minute range up to every 60 s for the
-7-day range), and chart hover is drawn by a separate overlay that owns its state, so moving the
+7-day range), not with every sample. History's observable `revision` changes only when a chart
+must redraw at once: a gap begins or ends (a pause, sleep), the retention setting changes, or
+history is cleared. Chart hover is drawn by a separate overlay that owns its state, so moving the
 pointer never re-renders a chart's marks.
+
+The dashboard's detail column is wrapped in `FillingLayout`, which takes the size it's offered
+and doesn't ask the page inside how large it would like to be. Behind a flexible frame, each of
+AppKit's and SwiftUI's size queries (minimum size, ideal size, alignment) made the page's scroll
+view measure its whole content again, several times per update.
+
+The Window menu is AppKit's windows menu only while RamLume has a window. AppKit adds the
+system's window items to its windows menu and works through them whenever the app's menus are
+read, which macOS can do each time visible content changes; with only the menu bar panel open,
+nothing shows that menu. AppKit ignores `windowsMenu = nil`, so `MainMenuBuilder` takes a menu
+out of use by showing a new one in its place, and registers a new one when a window opens.
 
 ## Concurrency
 

@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import ServiceManagement
 import Testing
@@ -219,3 +220,78 @@ struct LaunchAtLoginTests {
         #expect(!LaunchAtLoginService.isInApplicationsFolder(URL(fileURLWithPath: "/Applications-old/RamLume.app")))
     }
 }
+
+@MainActor
+@Suite("System events")
+struct SystemEventsTests {
+    final class Reported: @unchecked Sendable {
+        var values: [Bool] = []
+    }
+
+    /// Display sleep and fast user switching both hide the menu bar. Displays that wake for
+    /// someone else's session don't bring this one back.
+    @Test func aSwitchedOutSessionStaysUnseenWhenTheDisplaysWake() {
+        let center = NotificationCenter()
+        let observer = SystemEventsObserver(workspaceCenter: center)
+        let reported = Reported()
+        observer.start(.init(
+            willSleep: {}, didWake: {}, willPowerOff: {},
+            screensAsleepChanged: { reported.values.append($0) },
+            lowPowerModeChanged: { _ in }
+        ))
+        center.post(name: NSWorkspace.sessionDidResignActiveNotification, object: nil)
+        #expect(reported.values.last == true)
+        center.post(name: NSWorkspace.screensDidSleepNotification, object: nil)
+        center.post(name: NSWorkspace.screensDidWakeNotification, object: nil)
+        #expect(reported.values.last == true)
+        center.post(name: NSWorkspace.sessionDidBecomeActiveNotification, object: nil)
+        #expect(reported.values.last == false)
+        observer.stop()
+    }
+}
+
+@MainActor
+@Suite("Main menu")
+struct MainMenuTests {
+    final class Target: NSObject {}
+
+    /// AppKit works through its windows menu every time the app's menus are read, so RamLume
+    /// hands it one only while it has a window. AppKit ignores `windowsMenu = nil`, so "not
+    /// registered" means the menu AppKit knows isn't the one in the menu bar.
+    @Test func theWindowMenuIsRegisteredOnlyWhileAWindowIsOpen() throws {
+        let previousMainMenu = NSApp.mainMenu
+        let previousHelpMenu = NSApp.helpMenu
+        defer {
+            NSApp.mainMenu = previousMainMenu
+            NSApp.helpMenu = previousHelpMenu
+        }
+        let target = Target()
+        let mainMenu = MainMenuBuilder.makeMainMenu(target: target)
+        // AppKit only accepts a windows menu that is part of the app's main menu.
+        NSApp.mainMenu = mainMenu
+        let windowItem = try #require(mainMenu.items.first { $0.title == "Window" })
+        let own = ["Minimize", "Zoom", "Close", "Dashboard", "Bring All to Front"]
+        func ownTitles() -> [String] {
+            (windowItem.submenu?.items ?? []).map(\.title).filter(own.contains)
+        }
+        #expect(ownTitles() == own)
+        #expect(NSApp.windowsMenu !== windowItem.submenu)
+
+        // Kept alive, so a new menu can't reuse an old one's address and pass for it.
+        var registered: [NSMenu] = []
+        for _ in 0..<3 {
+            MainMenuBuilder.setWindowMenuRegistered(true)
+            let menu = try #require(windowItem.submenu)
+            #expect(NSApp.windowsMenu === menu)
+            #expect(ownTitles() == own)
+            #expect(!registered.contains { $0 === menu })
+            registered.append(menu)
+
+            MainMenuBuilder.setWindowMenuRegistered(false)
+            #expect(windowItem.submenu !== menu)
+            #expect(NSApp.windowsMenu !== windowItem.submenu)
+            #expect(ownTitles() == own)
+        }
+    }
+}
+

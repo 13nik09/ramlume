@@ -119,13 +119,13 @@ struct NotificationPolicy: Sendable, Equatable {
 
         var delivered: [AlertCandidate] = []
         for candidate in conditions where !activeEpisodes.contains(candidate.key) {
-            if let last = lastDelivered[candidate.key], input.now.timeIntervalSince(last) < candidate.kind.cooldown {
+            if let last = lastDelivered[candidate.key], !last.hasElapsed(candidate.kind.cooldown, by: input.now) {
                 // Still cooling down: treat as handled for this episode.
                 activeEpisodes.insert(candidate.key)
                 continue
             }
             if candidate.kind != .criticalPressure, let lastAny = lastAnyDelivery,
-               input.now.timeIntervalSince(lastAny) < minimumSpacing {
+               !lastAny.hasElapsed(minimumSpacing, by: input.now) {
                 // Spacing not met yet; try again on a later evaluation without ending the episode.
                 continue
             }

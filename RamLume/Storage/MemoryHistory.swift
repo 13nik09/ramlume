@@ -112,8 +112,6 @@ struct MemoryHistory: Sendable, Equatable {
         tier == .raw ? raw.elements : (tiers[tier]?.elements ?? [])
     }
 
-    var latestPoint: HistoryPoint? { raw.last }
-
     // MARK: - Recording
 
     /// A sample this far before the newest one means the system clock was set back.
@@ -159,8 +157,8 @@ struct MemoryHistory: Sendable, Equatable {
         }
     }
 
-    /// Starts a gap (sleep, pause, read failure). Data before it is flushed so it isn't merged
-    /// with data after it.
+    /// Starts a gap (sleep, pause, read failure). A bucket that contains the start of a gap keeps
+    /// the samples from both sides of it; `segment` breaks the line there.
     mutating func beginGap(at date: Date, reason: HistoryGap.Reason) {
         guard openGap == nil else { return }
         openGap = OpenGap(start: date, reason: reason)
@@ -171,12 +169,6 @@ struct MemoryHistory: Sendable, Equatable {
         openGap = nil
         guard date > gap.start else { return }
         gaps.append(HistoryGap(start: gap.start, end: date, reason: gap.reason))
-    }
-
-    /// Records a completed gap directly (for example the time RamLume wasn't running).
-    mutating func recordGap(_ gap: HistoryGap) {
-        guard gap.end > gap.start else { return }
-        gaps.append(gap)
     }
 
     mutating func setRetention(_ newValue: HistoryRetention, now: Date) {

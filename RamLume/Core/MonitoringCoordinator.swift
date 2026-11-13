@@ -527,7 +527,6 @@ final class MonitoringCoordinator {
         // Process snapshots are immutable per scan; comparing timestamps avoids a deep comparison.
         if processes?.timestamp != current.processes?.timestamp { processes = current.processes }
         if growthFindings != current.growthFindings { growthFindings = current.growthFindings }
-        history.publishChanges()
     }
 
     // MARK: - History maintenance

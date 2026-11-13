@@ -116,7 +116,6 @@ extension View {
 /// Small uppercase section heading used in the panel.
 struct SectionHeading: View {
     var title: String
-    var trailing: String?
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
@@ -126,11 +125,6 @@ struct SectionHeading: View {
                 .textCase(.uppercase)
                 .accessibilityAddTraits(.isHeader)
             Spacer()
-            if let trailing {
-                Text(trailing)
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-            }
         }
     }
 }

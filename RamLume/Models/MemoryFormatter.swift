@@ -16,9 +16,11 @@ enum MemoryFormatter {
     static func string(fromBytes bytes: Double, style: Style = .standard, locale: Locale = .current) -> String {
         let value = bytes.isFinite ? max(bytes, 0) : 0
         let mebibytes = value / Double(MemoryUnits.mebibyte)
+        let kibibytes = value / Double(MemoryUnits.kibibyte)
 
-        // Switch to gigabytes from 1,000 MB so values never read "1,014 MB".
-        if mebibytes >= 1_000 {
+        // Switch to gigabytes from 1,000 MB so values never read "1,014 MB". Each unit is chosen
+        // from the rounded value, so 999.7 MB doesn't read "1,000 MB" either.
+        if mebibytes.rounded() >= 1_000 {
             let gibibytes = value / Double(MemoryUnits.gibibyte)
             var digits: Int
             switch style {
@@ -31,11 +33,10 @@ enum MemoryFormatter {
             }
             return "\(number(gibibytes, fractionDigits: digits, locale: locale)) GB"
         }
-        if mebibytes >= 1 {
+        if kibibytes.rounded() >= 1_024 {
             let digits = (style == .compact || mebibytes >= 100) ? 0 : 1
             return "\(number(mebibytes, fractionDigits: digits, locale: locale)) MB"
         }
-        let kibibytes = value / Double(MemoryUnits.kibibyte)
         return "\(number(kibibytes, fractionDigits: 0, locale: locale)) KB"
     }
 
@@ -84,6 +85,11 @@ enum MemoryFormatter {
         let hours = minutes / 60
         let remainder = minutes % 60
         return remainder == 0 ? "\(hours) h" : "\(hours) h \(remainder) min"
+    }
+
+    /// "1 process", "12 processes".
+    static func processCount(_ count: Int) -> String {
+        count == 1 ? "1 process" : "\(count) processes"
     }
 
     /// Large page counts with grouping separators, e.g. "1,048,576".

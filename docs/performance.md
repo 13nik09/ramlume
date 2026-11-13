@@ -111,6 +111,30 @@ hundreds of gaps), so compare columns, not this table with the one above.
 | Panel content | 2.7 % → 2.8 % | 67 M → 68 M | 91 → 90 MB |
 | Menu bar only | 0.08 % → 0.07 % | 2.3 M → 2.2 M | 20 → 20 MB |
 
+### Before and after the dashboard layout change
+
+After 0.1.1, a profile of the installed app (dashboard filling a 14-inch display, Advanced ›
+Memory) showed about half of the main thread's active time in SwiftUI measuring the page's
+scrolling content: once for the layout, and again for AppKit's minimum-size query, for a size
+check when the update was flushed, and for alignment queries, each with a different proposal.
+The detail column now sits in a layout that takes the size it's offered without asking its
+content (`FillingLayout`), so the page is measured once per update.
+
+Same Mac, optimized builds alternating, one 1,512 × 878 window at a time, 30 s after a 12 s
+warm-up, real data, pointer ignored. Instructions retired are the comparison to trust; CPU time
+varied by a factor of two between identical runs.
+
+| Visible | Instructions/s, before → after | Samples measuring the page, per 24 s profile |
+|---|---|---|
+| Advanced › Memory | 119, 126, 124 M → 45, 47, 86 M | 164–191 → 53–59 |
+| Home | 71, 106, 96 M → 88, 64, 89 M | 77–82 → 15–18 |
+
+Memory does about half the work. On Home the measuring pass is gone as well, but drawing the
+chart dominates and the totals overlap. One earlier series of runs on the same builds showed no
+gain on either page and wasn't reproduced in the nine paired runs that followed; treat single
+runs with suspicion. History (charts redraw on a timer), Applications, the panel, and the menu
+bar alone are unchanged.
+
 ## What keeps it light
 
 - One sampling loop for the whole app, with a 10 % timer tolerance so macOS can coalesce
@@ -120,6 +144,8 @@ hundreds of gaps), so compare columns, not this table with the one above.
   dashboard, or a closed panel, causes no view updates.
 - Views receive pre-formatted values and are compared with `Equatable`, so a second in which no
   displayed text changes doesn't re-render them.
+- The dashboard's page is measured once per update: its column fills the window without asking
+  the page how large it would like to be.
 - Charts redraw on their own schedule (every 2 s for the 5-minute range, up to every 60 s for
   7 days) with at most 120 points per series, and the hover crosshair is a separate overlay so
   moving the pointer doesn't re-render chart marks.

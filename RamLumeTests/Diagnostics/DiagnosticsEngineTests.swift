@@ -139,6 +139,17 @@ struct DiagnosticsEngineTests {
         #expect(pressured.first { $0.id.hasPrefix("largest-consumer") }?.kind == .suggestion)
     }
 
+    /// An app with a helper RamLume can't measure (say, one that runs as root).
+    @Test func consumerWithOneMeasurableProcessIsNotDescribedAsSeveral() throws {
+        let mixed = Fixtures.processSnapshot(records: [
+            Fixtures.process(pid: 9, path: Fixtures.braveMain, footprint: 3 * Fixtures.gib),
+            Fixtures.process(pid: 10, path: Fixtures.braveGPU, footprint: nil),
+        ])
+        let insight = try #require(insights(processes: mixed).first { $0.id.hasPrefix("largest-consumer") })
+        #expect(!insight.message.contains("across"))
+        #expect(insight.message.contains("3 GB (19% of RAM)"))
+    }
+
     @Test func smallConsumersAreNotFlagged() {
         let small = Fixtures.processSnapshot(records: [Fixtures.process(pid: 9, path: Fixtures.braveMain, footprint: 300 * Fixtures.mib)])
         #expect(!insights(processes: small).contains { $0.id.hasPrefix("largest-consumer") })

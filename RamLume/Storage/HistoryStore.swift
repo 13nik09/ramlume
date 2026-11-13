@@ -111,10 +111,11 @@ final class HistoryStore {
     /// The first save happens this soon after launch, so short sessions are kept too.
     static let firstSaveDelay: TimeInterval = 60
 
-    /// Not observed directly: it changes every sample. Views that need live updates read
-    /// `revision`; long-range charts refresh on their own, slower schedule.
+    /// Not observed: it changes with every sample, and charts redraw on their own timers (see
+    /// `HistorySeriesReader`).
     @ObservationIgnored private(set) var history: MemoryHistory
-    /// Incremented whenever `history` changes.
+    /// Incremented when history changes in a way a chart must show at once: a gap begins or ends,
+    /// the retention setting changes, or history is cleared. Samples don't count.
     private(set) var revision = 0
     private(set) var events: RingBuffer<MemoryEvent>
     /// Set when an existing history file couldn't be read at launch.
@@ -123,9 +124,6 @@ final class HistoryStore {
     @ObservationIgnored private let persistence: HistoryPersistence?
     @ObservationIgnored private let writer: HistoryWriter?
     @ObservationIgnored private var lastSaved: Date?
-    /// Sample appends are published (via `revision`) only when `publishChanges()` is called,
-    /// so history doesn't invalidate views that aren't on screen.
-    @ObservationIgnored private var hasUnpublishedChanges = false
 
     init(retention: HistoryRetention, persistence: HistoryPersistence?, now: Date = Date()) {
         self.persistence = persistence
@@ -152,14 +150,6 @@ final class HistoryStore {
 
     func append(_ point: HistoryPoint) {
         history.append(point)
-        hasUnpublishedChanges = true
-    }
-
-    /// Bumps `revision` if samples were appended since the last call.
-    func publishChanges() {
-        guard hasUnpublishedChanges else { return }
-        hasUnpublishedChanges = false
-        revision &+= 1
     }
 
     func beginGap(at date: Date, reason: HistoryGap.Reason) {

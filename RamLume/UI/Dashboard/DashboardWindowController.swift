@@ -9,6 +9,7 @@ enum ActivationPolicyController {
 
     static func windowDidOpen(_ window: NSWindow) {
         openWindows.insert(ObjectIdentifier(window))
+        MainMenuBuilder.setWindowMenuRegistered(true)
         #if DEBUG
         // `--no-activate` runs (tests, stress runs, screenshots) stay out of the Dock, which would
         // otherwise show and hide RamLume's icon with every window.
@@ -21,7 +22,9 @@ enum ActivationPolicyController {
 
     static func windowWillClose(_ window: NSWindow) {
         openWindows.remove(ObjectIdentifier(window))
-        if openWindows.isEmpty, NSApp.activationPolicy() != .accessory {
+        guard openWindows.isEmpty else { return }
+        MainMenuBuilder.setWindowMenuRegistered(false)
+        if NSApp.activationPolicy() != .accessory {
             NSApp.setActivationPolicy(.accessory)
         }
     }

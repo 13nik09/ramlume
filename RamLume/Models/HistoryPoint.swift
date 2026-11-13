@@ -44,11 +44,6 @@ struct HistoryPoint: Sendable, Equatable, Codable {
     /// Where the point is drawn on a time axis.
     var plotDate: Date { start.addingTimeInterval(duration / 2) }
 
-    /// The fraction of samples with known pressure that were at warning or worse.
-    var elevatedPressureFraction: Double? {
-        pressureSampleCount > 0 ? Double(elevatedPressureSamples) / Double(pressureSampleCount) : nil
-    }
-
     /// Share of samples with known pressure at each level (normal, warning, critical), summing to 1.
     var pressureShares: (normal: Double, warning: Double, critical: Double)? {
         guard pressureSampleCount > 0 else { return nil }
